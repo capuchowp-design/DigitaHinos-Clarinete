@@ -341,6 +341,32 @@
             .welcome-screen p{margin-bottom:8px}
             .credits{margin-top:8px}
         }
+                .voice-bar { display:flex; align-items:center; justify-content:center; gap:6px; flex-wrap:wrap; padding:6px 12px; background:var(--bg-controls); border-top:1px solid var(--border-main); flex-shrink:0; }
+                .voice-bar[hidden] { display:none; }
+                .voice-bar .vb-label { font-size:11px; color:var(--text-muted); margin-right:2px; }
+                .voice-chip { display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:16px; border:1px solid var(--border-btn); background:var(--bg-btn); color:var(--text-muted); font-size:12px; font-weight:600; cursor:pointer; transition:all .15s; min-height:32px; font-family:inherit; }
+                .voice-chip .dot { width:9px; height:9px; border-radius:50%; background:var(--vc,#888); opacity:.35; transition:opacity .15s; }
+                .voice-chip.on { color:var(--text-main); border-color:var(--vc,#fcad2a); background:var(--bg-btn-hover); box-shadow:0 0 0 1px var(--vc,#fcad2a) inset; }
+                .voice-chip.on .dot { opacity:1; box-shadow:0 0 6px var(--vc,#fcad2a); }
+                .voice-chip.all.on { --vc:#fcad2a; }
+                @media(max-width:480px){ .voice-bar{padding:5px 8px;gap:5px;} .voice-bar .vb-label{display:none;} .voice-chip{padding:6px 10px;font-size:11px;} }
+        
+
+        /* hinário */
+        .hn-modal { position:fixed; inset:0; z-index:2000; background:rgba(0,0,0,.62); display:flex; align-items:center; justify-content:center; padding:12px; }
+        .hn-modal[hidden] { display:none; }
+        .hn-sheet { width:100%; max-width:520px; max-height:88vh; display:flex; flex-direction:column; background:var(--bg-panel); color:var(--text-main); border:1px solid var(--border-btn); border-radius:14px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.5); }
+        .hn-head { display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border-bottom:1px solid var(--border-main); }
+        .hn-head h2 { font-size:16px; margin:0; }
+        .hn-x { background:var(--bg-btn); color:var(--text-main); border:1px solid var(--border-btn); border-radius:8px; width:32px; height:32px; cursor:pointer; font-size:14px; }
+        .hn-body { padding:12px 14px 14px; overflow:auto; display:flex; flex-direction:column; min-height:0; }
+        .hn-search { width:100%; box-sizing:border-box; background:var(--bg-input); color:var(--text-main); border:1px solid var(--border-btn); border-radius:8px; padding:10px 11px; font-size:14px; margin-bottom:10px; font-family:inherit; }
+        #hnList { list-style:none; margin:0; padding:0; overflow:auto; }
+        #hnList li { padding:9px 8px; border-bottom:1px solid var(--border-main); cursor:pointer; border-radius:6px; }
+        #hnList li:hover { background:var(--bg-btn-hover); }
+        #hnList li.empty { cursor:default; color:var(--text-muted); text-align:center; }
+        #hnList small { display:block; color:var(--text-muted); font-size:11px; margin-top:2px; }
+        .hn-num { display:inline-block; min-width:34px; font-variant-numeric:tabular-nums; color:#6fd3e8; font-weight:700; }
 </style>
 </head>
 <body>
@@ -358,6 +384,7 @@
         <button class="tab-btn active" id="tabPlayer" onclick="switchView('player')">
             <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg><span>Player</span>
         </button>
+        <button class="tab-btn" id="btnHinos" title="Hinário">🎵 <span>Hinos</span></button>
         <button class="tab-btn" id="tabScore" onclick="switchView('score')">
             <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg><span>Partitura</span>
         </button>
@@ -366,8 +393,8 @@
         <button class="theme-btn" id="themeBtn" title="Alternar modo claro/escuro">🌙</button>
         <label class="file-label">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            Abrir MIDI
-            <input type="file" id="fileInput" accept=".mid,.midi">
+            Abrir MIDI / MXL
+            <input type="file" id="fileInput" accept=".mid,.midi,.mxl,.xml,.musicxml">
         </label>
     </div>
 </header>
@@ -385,11 +412,12 @@
                     <defs><linearGradient id="wg" x1="0" y1="0" x2="120" y2="120"><stop stop-color="#6fd3e8"/><stop offset="1" stop-color="#2e86c1"/></linearGradient></defs>
                 </svg>
                 <h1>Clarinet Bounce</h1>
-                <p>Carregue um arquivo MIDI ou crie sua própria partitura</p>
+                <p>Carregue um arquivo MIDI, MusicXML (.mxl / .xml), abra um hino ou crie sua própria partitura</p>
                 <div class="welcome-btns">
-                    <label class="welcome-upload" for="welcomeFileInput">Carregar MIDI
-                        <input type="file" id="welcomeFileInput" accept=".mid,.midi" style="display:none">
+                    <label class="welcome-upload" for="welcomeFileInput">Carregar MIDI / MXL
+                        <input type="file" id="welcomeFileInput" accept=".mid,.midi,.mxl,.xml,.musicxml" style="display:none">
                     </label>
+                    <button class="welcome-compose" id="btnHinosWelcome">🎵 Hinos</button>
                     <button class="welcome-compose" onclick="switchView('score')">✏ Compor</button>
                 </div>
                 <div class="support-btns" style="margin-top:12px;">
@@ -431,6 +459,10 @@
             <div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div></div>
         </div>
         <div class="piano-container"><canvas id="pianoCanvas"></canvas></div>
+    </div>
+    <div class="voice-bar" id="voiceBar" hidden>
+        <span class="vb-label">Vozes:</span>
+        <div id="voiceChips" style="display:contents"></div>
     </div>
     <div class="controls-bar">
         <div class="transport-group">
@@ -600,6 +632,16 @@
 <div class="error-toast" id="errorToast"></div>
 <div class="success-toast" id="successToast"></div>
 
+
+<div class="hn-modal" id="mHinos" hidden>
+  <div class="hn-sheet">
+    <div class="hn-head"><h2>🎵 Hinário</h2><button class="hn-x" id="hnClose" aria-label="Fechar">✕</button></div>
+    <div class="hn-body">
+      <input type="search" class="hn-search" id="hnSearch" placeholder="Buscar por número ou título" autocomplete="off">
+      <ul id="hnList"><li class="empty">Carregando…</li></ul>
+    </div>
+  </div>
+</div>
 <script>
 // ======================== VIEW SWITCHING ========================
 function switchView(v) {
@@ -675,13 +717,338 @@ function parseMidiFile(buf){
     return {notes:all, duration:all.length?Math.max(...all.map(n=>n.endTime)):0};
 }
 
+// ======================== MUSICXML (.xml / .musicxml / .mxl) ========================
+// .mxl é um ZIP com o XML dentro. Usa DecompressionStream quando existe e, se o aparelho for
+// antigo, um descompactador próprio (inflate) — assim funciona também offline no APK.
+const _INF_LB=[3,4,5,6,7,8,9,10,11,13,15,17,19,23,27,31,35,43,51,59,67,83,99,115,131,163,195,227,258];
+const _INF_LE=[0,0,0,0,0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,0];
+const _INF_DB=[1,2,3,4,5,7,9,13,17,25,33,49,65,97,129,193,257,385,513,769,1025,1537,2049,3073,4097,6145,8193,12289,16385,24577];
+const _INF_DE=[0,0,0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13];
+function inflateRawJS(src){
+    let pos=0,bb=0,bc=0,out=new Uint8Array(Math.max(1024,src.length*4)),op=0;
+    const need=n=>{ if(op+n>out.length){ const o=new Uint8Array(Math.max(out.length*2,op+n)); o.set(out); out=o; } };
+    const bits=n=>{ while(bc<n){ if(pos>=src.length) throw new Error('zip truncado'); bb|=src[pos++]<<bc; bc+=8; } const v=bb&((1<<n)-1); bb>>>=n; bc-=n; return v; };
+    const build=len=>{
+        const count=new Uint16Array(16), offs=new Uint16Array(16), sym=new Uint16Array(len.length);
+        for(let i=0;i<len.length;i++) count[len[i]]++;
+        count[0]=0;
+        for(let i=1;i<15;i++) offs[i+1]=offs[i]+count[i];
+        for(let s=0;s<len.length;s++) if(len[s]) sym[offs[len[s]]++]=s;
+        return {count,sym};
+    };
+    const dec=h=>{
+        let code=0,first=0,index=0;
+        for(let l=1;l<16;l++){
+            code|=bits(1); const c=h.count[l];
+            if(code-c<first) return h.sym[index+(code-first)];
+            index+=c; first+=c; first<<=1; code<<=1;
+        }
+        throw new Error('código inválido');
+    };
+    let last;
+    do{
+        last=bits(1); const type=bits(2);
+        if(type===0){
+            bb=0; bc=0;
+            const len=src[pos]|(src[pos+1]<<8); pos+=4;
+            need(len); out.set(src.subarray(pos,pos+len),op); op+=len; pos+=len;
+        } else if(type===1||type===2){
+            let lit,dist;
+            if(type===1){
+                const l=new Uint8Array(288); for(let i=0;i<288;i++) l[i]=i<144?8:i<256?9:i<280?7:8;
+                lit=build(l); dist=build(new Uint8Array(30).fill(5));
+            } else {
+                const nlen=bits(5)+257, ndist=bits(5)+1, ncode=bits(4)+4;
+                const order=[16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15];
+                const cl=new Uint8Array(19); for(let i=0;i<ncode;i++) cl[order[i]]=bits(3);
+                const ch=build(cl), all=new Uint8Array(nlen+ndist); let i=0;
+                while(i<nlen+ndist){
+                    const s=dec(ch);
+                    if(s<16) all[i++]=s;
+                    else { let rep,val=0;
+                        if(s===16){ val=all[i-1]; rep=3+bits(2); } else if(s===17) rep=3+bits(3); else rep=11+bits(7);
+                        while(rep--) all[i++]=val; }
+                }
+                lit=build(all.subarray(0,nlen)); dist=build(all.subarray(nlen));
+            }
+            for(;;){
+                let s=dec(lit);
+                if(s<256){ need(1); out[op++]=s; }
+                else if(s===256) break;
+                else { s-=257; const len=_INF_LB[s]+bits(_INF_LE[s]); const ds=dec(dist); const d=_INF_DB[ds]+bits(_INF_DE[ds]);
+                    need(len); for(let k=0;k<len;k++){ out[op]=out[op-d]; op++; } }
+            }
+        } else throw new Error('zip inválido');
+    }while(!last);
+    return out.subarray(0,op);
+}
+async function inflateRaw(u8){
+    if(typeof DecompressionStream!=='undefined'){
+        try{
+            const s=new Blob([u8]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+            return new Uint8Array(await new Response(s).arrayBuffer());
+        }catch(e){}
+    }
+    return inflateRawJS(u8);
+}
+function readZip(buf){
+    const u8=new Uint8Array(buf), dv=new DataView(buf), td=new TextDecoder('utf-8');
+    let e=u8.length-22;
+    for(;e>=Math.max(0,u8.length-65557);e--) if(dv.getUint32(e,true)===0x06054b50) break;
+    if(e<0||dv.getUint32(e,true)!==0x06054b50) throw new Error('arquivo .mxl inválido');
+    const n=dv.getUint16(e+10,true); let p=dv.getUint32(e+16,true); const ents={};
+    for(let i=0;i<n;i++){
+        if(dv.getUint32(p,true)!==0x02014b50) break;
+        const method=dv.getUint16(p+10,true), csize=dv.getUint32(p+20,true), nl=dv.getUint16(p+28,true),
+              xl=dv.getUint16(p+30,true), cl=dv.getUint16(p+32,true), lho=dv.getUint32(p+42,true);
+        ents[td.decode(u8.subarray(p+46,p+46+nl))]={method,csize,lho};
+        p+=46+nl+xl+cl;
+    }
+    return {
+        names:Object.keys(ents),
+        has:n=>!!ents[n],
+        async bytes(name){
+            const en=ents[name], lp=en.lho, ds=lp+30+dv.getUint16(lp+26,true)+dv.getUint16(lp+28,true);
+            const data=u8.subarray(ds,ds+en.csize);
+            return en.method===0?data:await inflateRaw(data);
+        },
+        async text(name){ return td.decode(await this.bytes(name)); }
+    };
+}
+
+const MXL_COLORS=['#4d96ff','#ff6b6b','#6bcb77','#ffd93d'];
+const MXL_SATB=['Soprano','Contralto','Tenor','Baixo'];
+function mxlCanon(s){
+    s=(s||'').toLowerCase();
+    if(/sopran|descant/.test(s)) return 0;
+    if(/contralt|\balto\b|mezzo/.test(s)) return 1;
+    if(/tenor/.test(s)) return 2;
+    if(/\bbass|baix|bar[ií]ton/.test(s)) return 3;
+    return -1;
+}
+function mxlKids(el,name){ return Array.from(el.children).filter(c=>c.localName===name); }
+function mxlKid(el,name){ return mxlKids(el,name)[0]||null; }
+function mxlTxt(el){ return el?(el.textContent||'').trim():''; }
+
+// Ordem em que os compassos são tocados (ritornelos e casas 1/2/3 são expandidos).
+function mxlMeasureOrder(ms){
+    const n=ms.length;
+    const info=ms.map(m=>{
+        const o={fwd:false,back:0,endStart:null,endStop:false};
+        mxlKids(m,'barline').forEach(b=>{
+            const r=mxlKid(b,'repeat');
+            if(r){ const d=r.getAttribute('direction');
+                if(d==='forward') o.fwd=true;
+                else if(d==='backward') o.back=Math.max(1,(parseInt(r.getAttribute('times'))||2)-1); }
+            const en=mxlKid(b,'ending');
+            if(en){ if(en.getAttribute('type')==='start') o.endStart=(en.getAttribute('number')||'1').split(/[,\s]+/).filter(Boolean).map(Number); else o.endStop=true; }
+        });
+        return o;
+    });
+    let act=null; info.forEach(o=>{ if(o.endStart) act=o.endStart; o.ending=act; if(o.endStop) act=null; });
+    const order=[], jumps=new Map(); let i=0,start=0,pass=1,guard=0;
+    while(i<n&&guard++<20000){
+        const o=info[i];
+        if(o.fwd) start=i;
+        if(o.ending&&!o.ending.includes(pass)){ i++; continue; }
+        order.push(i);
+        if(o.back){
+            const c=jumps.get(i)||0;
+            if(c<o.back){ jumps.set(i,c+1); pass=c+2; i=start; continue; }
+            jumps.delete(i); pass=1; start=i+1; i++; continue;
+        }
+        if(o.endStop){ pass=1; start=i+1; }
+        i++;
+    }
+    return order.length?order:ms.map((_,k)=>k);
+}
+
+// Divide uma linha escrita como acordes (ex.: soprano+contralto na mesma haste) em vozes separadas.
+function mxlSplitChordLine(L){
+    const byOn=new Map();
+    L.notes.forEach(n=>{ const k=n.s.toFixed(4); if(!byOn.has(k)) byOn.set(k,[]); byOn.get(k).push(n); });
+    const sizes=[...byOn.values()].map(a=>a.length), multi=sizes.filter(x=>x>=2);
+    if(!multi.length||multi.length<sizes.length*0.4) return [L];
+    const freq=new Map(); multi.forEach(x=>freq.set(x,(freq.get(x)||0)+1));
+    let size=2,best=0; freq.forEach((c,x)=>{ if(c>best||(c===best&&x>size)){ best=c; size=x; } });
+    const subs=Array.from({length:size},()=>({part:L.part,staff:L.staff,notes:[]}));
+    byOn.forEach(arr=>{
+        arr.sort((a,b)=>b.midi-a.midi);
+        if(arr.length===1) subs.forEach((S,i)=>S.notes.push(i===0?arr[0]:Object.assign({},arr[0])));
+        else arr.forEach((n,k)=>subs[Math.min(k,size-1)].notes.push(n));
+    });
+    return subs;
+}
+
+async function parseMusicXmlFile(buf){
+    const u8=new Uint8Array(buf); let xml;
+    if(u8[0]===0x50&&u8[1]===0x4B){
+        const z=readZip(buf); let root=null;
+        const cont=z.names.find(n=>/(^|\/)META-INF\/container\.xml$/i.test(n));
+        if(cont){ const cx=new DOMParser().parseFromString(await z.text(cont),'application/xml'); const rf=cx.getElementsByTagName('rootfile')[0]; root=rf&&rf.getAttribute('full-path'); }
+        if(!root||!z.has(root)) root=z.names.find(n=>/\.(xml|musicxml)$/i.test(n)&&!/^META-INF\//i.test(n));
+        if(!root) throw new Error('Nenhuma partitura dentro do .mxl');
+        xml=await z.text(root);
+    } else {
+        const enc=(u8[0]===0xFF&&u8[1]===0xFE)?'utf-16le':(u8[0]===0xFE&&u8[1]===0xFF)?'utf-16be':'utf-8';
+        xml=new TextDecoder(enc).decode(u8);
+    }
+    xml=xml.replace(/^﻿/,'');
+    const doc=new DOMParser().parseFromString(xml,'application/xml');
+    if(doc.getElementsByTagName('parsererror').length) throw new Error('XML inválido');
+    const rootEl=doc.documentElement;
+    if(rootEl.localName==='score-timewise') throw new Error('MusicXML "timewise" não é suportado — exporte como "partwise"');
+    if(rootEl.localName!=='score-partwise') throw new Error('Não é um arquivo MusicXML');
+
+    const partNames={};
+    Array.from(doc.getElementsByTagName('score-part')).forEach(sp=>{
+        partNames[sp.getAttribute('id')]=mxlTxt(mxlKid(sp,'part-name'))||mxlTxt(mxlKid(sp,'part-abbreviation'));
+    });
+    const parts=mxlKids(rootEl,'part'), raw=[], tempos=[], bars=[];
+    const STEP={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+
+    parts.forEach((part,pi)=>{
+        const ms=mxlKids(part,'measure');
+        // divisions vigentes no início de cada compasso (carrega adiante)
+        const divAt=[]; let dcur=1;
+        ms.forEach((m,i)=>{ divAt[i]=dcur; mxlKids(m,'attributes').forEach(a=>{ const d=mxlKid(a,'divisions'); if(d&&+mxlTxt(d)>0) dcur=+mxlTxt(d); }); });
+        const pend=new Map(); let t=0;
+        for(const mi of mxlMeasureOrder(ms)){
+            const m=ms[mi]; let D=divAt[mi], pos=0, maxPos=0, lastStart=0;
+            for(const el of Array.from(m.children)){
+                const ln=el.localName;
+                if(ln==='attributes'){ const d=mxlKid(el,'divisions'); if(d&&+mxlTxt(d)>0) D=+mxlTxt(d); }
+                else if(ln==='direction'||ln==='sound'){
+                    const snd=ln==='sound'?el:mxlKid(el,'sound'), tp=snd&&parseFloat(snd.getAttribute('tempo'));
+                    if(tp>0) tempos.push({beat:t+pos/D,bpm:tp});
+                }
+                else if(ln==='backup'){ pos-=(+mxlTxt(mxlKid(el,'duration'))||0); }
+                else if(ln==='forward'){ pos+=(+mxlTxt(mxlKid(el,'duration'))||0); maxPos=Math.max(maxPos,pos); }
+                else if(ln==='note'){
+                    if(mxlKid(el,'grace')) continue;
+                    const isChord=!!mxlKid(el,'chord'), dur=+mxlTxt(mxlKid(el,'duration'))||0;
+                    let start;
+                    if(isChord) start=lastStart; else { start=pos; lastStart=pos; pos+=dur; maxPos=Math.max(maxPos,pos); }
+                    if(mxlKid(el,'rest')||mxlKid(el,'cue')) continue;
+                    const pitch=mxlKid(el,'pitch'); if(!pitch) continue;
+                    const step=STEP[mxlTxt(mxlKid(pitch,'step')).toUpperCase()]; if(step===undefined) continue;
+                    const midi=(parseInt(mxlTxt(mxlKid(pitch,'octave')))+1)*12+step+Math.round(parseFloat(mxlTxt(mxlKid(pitch,'alter')))||0);
+                    if(!(midi>=0&&midi<=127)||!(dur>0)) continue;
+                    const staff=parseInt(mxlTxt(mxlKid(el,'staff')))||1, voice=mxlTxt(mxlKid(el,'voice'))||'1';
+                    const sQ=t+start/D, eQ=sQ+dur/D;
+                    const ties=mxlKids(el,'tie').map(x=>x.getAttribute('type'));
+                    const key=pi+'|'+staff+'|'+voice+'|'+midi, p=pend.get(key); let nt;
+                    if(ties.includes('stop')&&p&&Math.abs(p.e-sQ)<1e-3){ p.e=eQ; nt=p; }
+                    else { nt={part:pi,staff,voice,midi,s:sQ,e:eQ,stem:mxlTxt(mxlKid(el,'stem'))}; raw.push(nt); }
+                    if(ties.includes('start')) pend.set(key,nt); else pend.delete(key);
+                }
+            }
+            if(pi===0) bars.push({q:t,len:maxPos/D});
+            t+=maxPos/D;
+        }
+    });
+    if(!raw.length) throw new Error('Nenhuma nota encontrada');
+
+    // tempo (em quartos de nota por minuto) → segundos
+    tempos.sort((a,b)=>a.beat-b.beat);
+    const segs=[{beat:0,bpm:tempos.length?tempos[0].bpm:120,sec:0}];
+    for(const tp of tempos){
+        const l=segs[segs.length-1];
+        if(tp.beat<=1e-6){ segs[0].bpm=tp.bpm; continue; }
+        if(Math.abs(tp.beat-l.beat)<1e-6){ l.bpm=tp.bpm; continue; }
+        segs.push({beat:tp.beat,bpm:tp.bpm,sec:l.sec+(tp.beat-l.beat)*60/l.bpm});
+    }
+    const secOf=q=>{ let i=segs.length-1; while(i>0&&segs[i].beat>q) i--; return segs[i].sec+(q-segs[i].beat)*60/segs[i].bpm; };
+
+    // Corais/hinários: pauta de cima (Sol) = soprano (nota de cima / haste p/ cima) + contralto (nota de baixo / haste p/ baixo);
+    // pauta de baixo (Fá) = tenor (cima) + baixo (baixo). Vale para 1 parte com 2 pautas ou 2 partes.
+    const staffGroups=new Map();
+    raw.forEach(n=>{ const k=n.part+'|'+n.staff; if(!staffGroups.has(k)) staffGroups.set(k,[]); staffGroups.get(k).push(n); });
+    if(staffGroups.size===2){
+        const gs=[...staffGroups.values()].map(g=>({g,mean:g.reduce((a,n)=>a+n.midi,0)/g.length})).sort((a,b)=>b.mean-a.mean);
+        const slots=[[],[],[],[]];                       // S, A, T, B
+        gs.forEach((G,gi)=>{
+            const upper=slots[gi*2], lower=slots[gi*2+1], byOn=new Map();
+            G.g.forEach(n=>{ const k=n.s.toFixed(4); if(!byOn.has(k)) byOn.set(k,[]); byOn.get(k).push(n); });
+            byOn.forEach(arr=>{
+                arr.sort((a,b)=>b.midi-a.midi);
+                if(arr.length>=2){
+                    arr.forEach((n,i)=>{
+                        if(i===0) upper.push(n);
+                        else if(i===arr.length-1) lower.push(n);
+                        else (n.voice===arr[0].voice?upper:lower).push(n);
+                    });
+                } else {
+                    const n=arr[0]; let up=true;
+                    if(n.stem==='down') up=false;
+                    else if(n.stem==='up') up=true;
+                    else if(/^\d+$/.test(n.voice)&&G.g.some(o=>o.voice!==n.voice)) up=(+n.voice%2===1);
+                    else {
+                        // sem haste: se outra nota de outra voz está soando, compara a altura
+                        const held=G.g.find(o=>o!==n&&o.s<n.s-1e-6&&o.e>n.s+1e-6);
+                        if(held) up=n.midi>=held.midi;
+                    }
+                    (up?upper:lower).push(n);
+                }
+            });
+        });
+        const named=slots.map(a=>({part:0,staff:0,notes:a,mean:0}));
+        if(named.every(L=>L.notes.length)){ var satbLines=named; }
+    }
+    // linhas melódicas = (parte, pauta, voz)
+    const lm=new Map();
+    raw.forEach(n=>{ const k=n.part+'|'+n.staff+'|'+n.voice; let L=lm.get(k); if(!L) lm.set(k,L={part:n.part,staff:n.staff,notes:[]}); L.notes.push(n); });
+    let lines=typeof satbLines!=='undefined'?satbLines:[...lm.values()];
+    const isSatb=typeof satbLines!=='undefined';
+    lines.forEach(L=>{ L.mean=L.notes.reduce((a,n)=>a+n.midi,0)/L.notes.length; });
+    if(!isSatb) lines.sort((a,b)=>a.part-b.part||a.staff-b.staff||b.mean-a.mean);
+    if(!isSatb&&lines.length<4){ const sp=lines.flatMap(mxlSplitChordLine); if(sp.length<=4||lines.length===1) lines=sp; }
+    lines.forEach(L=>{ if(L.mean===undefined) L.mean=L.notes.reduce((a,n)=>a+n.midi,0)/L.notes.length; });
+
+    const pname=L=>partNames[parts[L.part].getAttribute('id')]||'';
+    const canons=isSatb?[]:lines.map(L=>mxlCanon(pname(L)));
+    const distinctCanon=!isSatb&&canons.every(c=>c>=0)&&new Set(canons).size===canons.length;
+    let names;
+    if(lines.length>1&&distinctCanon){
+        const idx=lines.map((_,i)=>i).sort((a,b)=>canons[a]-canons[b]);
+        lines=idx.map(i=>lines[i]); names=idx.map(i=>MXL_SATB[canons[i]]);
+    } else if(lines.length===4) names=MXL_SATB.slice();
+    else names=lines.map((_,i)=>'Voz '+(i+1));
+
+    const notes=[], nmap={};
+    lines.forEach((L,ti)=>{
+        nmap[ti]=names[ti];
+        const color=lines.length===4?MXL_COLORS[ti]:gc(ti+3);
+        const seen=new Set();
+        L.notes.forEach(n=>{
+            const st=secOf(n.s), en=secOf(n.e), k=n.midi+'@'+st.toFixed(4);
+            if(seen.has(k)||en-st<=0.005) return; seen.add(k);
+            notes.push({midi:n.midi,startTime:st,endTime:en,duration:en-st,velocity:0.8,track:ti,color});
+        });
+    });
+    notes.sort((a,b)=>a.startTime-b.startTime);
+    // grade de batidas e de compassos (em segundos) — usada para calcular os acordes
+    const beatSecs=[], barSecs=[];
+    bars.filter(b=>b.len>1e-6).forEach(b=>{ barSecs.push(secOf(b.q)); for(let k=0;k<Math.ceil(b.len-1e-6);k++) beatSecs.push(secOf(b.q+k)); });
+    if(bars.length){ const lb=bars[bars.length-1]; beatSecs.push(secOf(lb.q+lb.len)); }
+    return {notes,duration:Math.max(...notes.map(n=>n.endTime)),bpm:segs[0].bpm,names:nmap,voiceCount:lines.length,beats:beatSecs,bars:barSecs};
+}
+
+// Abre qualquer formato suportado (MIDI, MusicXML, MXL) pelo conteúdo do arquivo.
+async function parseScoreFile(buf){
+    const u8=new Uint8Array(buf);
+    if(u8.length>=4&&u8[0]===0x4D&&u8[1]===0x54&&u8[2]===0x68&&u8[3]===0x64) return parseMidiFile(buf);
+    return await parseMusicXmlFile(buf);
+}
+
+
 // ======================== STATE ========================
 const state={
     notes:[], duration:0, currentTime:0,
     isPlaying:false, speed:1, volume:0.7,
     pianoKeys:[], lowestNote:21, highestNote:108,
     totalNotes:0, animFrameId:null,
-    pausedAt:0,
+    pausedAt:0, allNotes:[], voiceList:[], voiceSel:new Set(),
     sampler:null, samplerReady:false, piano:null, synth:null,
     midiLoaded:false,
     pps:200  // pixels per second
@@ -864,9 +1231,9 @@ function loadMidiFile(file){
     const reader=new FileReader();
     reader.onload=async e=>{
         try {
-            const parsed=parseMidiFile(e.target.result);
+            const parsed=await parseScoreFile(e.target.result);
             if(!parsed.notes.length) throw new Error('Nenhuma nota encontrada');
-            applyNotes(parsed.notes, parsed.duration);
+            applyNotes(parsed.notes, parsed.duration, parsed.names);
             toast(`Carregado! ${state.totalNotes} notas`, 'success');
         } catch(err){ toast('Erro: '+err.message); state.midiLoaded=false; }
         loadingOverlay.classList.remove('active');
@@ -875,8 +1242,9 @@ function loadMidiFile(file){
     reader.readAsArrayBuffer(file);
 }
 
-async function applyNotes(notes, duration){
+async function applyNotes(notes, duration, names){
     notes.forEach(n=>{ n.color=gc(n.track||0); });
+    state.allNotes=notes; buildVoiceBar(notes,names);
     state.notes=notes; state.duration=duration; state.midiLoaded=true;
     let mn=127,mx=0; notes.forEach(n=>{if(n.midi<mn)mn=n.midi;if(n.midi>mx)mx=n.midi;});
     state.lowestNote=Math.max(21,mn-2); state.highestNote=Math.min(108,mx+2);
@@ -888,6 +1256,45 @@ async function applyNotes(notes, duration){
     welcomeScreen.classList.add('hidden'); document.body.classList.add('inst-only'); resizeCanvases();
     resetPlayback();
     drawScene();
+}
+
+// ======================== SELETOR DE VOZES ========================
+// state.allNotes = todas as vozes do arquivo; state.notes = só as vozes escolhidas (o que aparece e toca).
+function buildVoiceBar(notes,names){
+    const bar=document.getElementById('voiceBar'), box=document.getElementById('voiceChips');
+    const tracks=[...new Set(notes.map(n=>n.track||0))].sort((a,b)=>a-b);
+    state.voiceList=tracks.map(t=>{ const n=notes.find(x=>(x.track||0)===t); return {track:t,name:(names&&names[t])||('Faixa '+(t+1)),color:n.color||gc(t)}; });
+    state.voiceSel=new Set(tracks); box.innerHTML='';
+    if(tracks.length<2){ bar.hidden=true; return; }
+    const mk=(label,color,cls,fn,title)=>{
+        const b=document.createElement('button'); b.type='button'; b.className='voice-chip '+cls; b.title=title||'';
+        const d=document.createElement('span'); d.className='dot'; b.appendChild(d); b.appendChild(document.createTextNode(label));
+        if(color) b.style.setProperty('--vc',color);
+        b.addEventListener('click',fn); box.appendChild(b); return b;
+    };
+    mk('Todas','','all',()=>setVoiceSel(tracks),'Tocar todas as vozes');
+    state.voiceList.forEach(v=>mk(v.name,v.color,'v'+v.track,()=>toggleVoice(v.track),'Tocar só '+v.name+' (toque em outra para somar)'));
+    bar.hidden=false; refreshVoiceBar();
+}
+function toggleVoice(t){
+    const all=state.voiceList.map(v=>v.track), sel=new Set(state.voiceSel);
+    if(sel.size===all.length) setVoiceSel([t]);                 // estava tudo ligado → só esta voz
+    else { sel.has(t)?sel.delete(t):sel.add(t); setVoiceSel(sel.size?[...sel]:all); }   // senão liga/desliga; vazio = todas
+}
+function setVoiceSel(list){
+    state.voiceSel=new Set(list);
+    state.notes=state.allNotes.filter(n=>state.voiceSel.has(n.track||0));
+    state.totalNotes=state.notes.length; noteCountBadge.textContent=state.totalNotes+' notas';
+    refreshVoiceBar();
+    if(state.isPlaying){ const cp=state.currentTime; pausePlayback(); state.pausedAt=cp; startPlayback(); }
+    else { drawScene(); }
+}
+function refreshVoiceBar(){
+    const all=state.voiceList.length, allOn=state.voiceSel.size===all;
+    document.querySelectorAll('#voiceChips .voice-chip').forEach(b=>{
+        if(b.classList.contains('all')) b.classList.toggle('on',allOn);
+        else { const t=+[...b.classList].find(c=>/^v\d+$/.test(c)).slice(1); b.classList.toggle('on',!allOn&&state.voiceSel.has(t)); }
+    });
 }
 
 function buildPianoKeys(){
@@ -1072,73 +1479,203 @@ function drawGrid(w,h,hl,pps){
 }
 
 // ======================== DIGITAÇÃO DO CLARINETE (tabela de digitação, Dó escrito E3–Dó7) ========================
-// th=orifício do polegar, reg=chave de registro, A/GS=chaves de Lá e Sol♯ (indicador esq.), L1-L3=orifícios esq., BB=chave lateral Si♭, LA=braço do anelar,
-// R1-R3=orifícios dir., RL=alavanca dir., S1-S3=chaves laterais dir., TR2/TR3=chaves de trinado, P1-P5=chaves do dedo mínimo
-const CLAF={52:'L1 L2 L3 P2 R1 R2 R3 th',53:'L1 L2 L3 P4 R1 R2 R3 th',54:'L1 L2 L3 P1 R1 R2 R3 th',55:'L1 L2 L3 R1 R2 R3 th',56:'L1 L2 L3 P5 R1 R2 R3 th',57:'L1 L2 L3 R1 R2 th',58:'L1 L2 L3 R1 th',59:'L1 L2 L3 R2 th',60:'L1 L2 L3 th',61:'L1 L2 L3 LA th',62:'L1 L2 th',63:'L1 L2 TR3 th',64:'L1 th',65:'th',66:'L1',67:'',68:'GS',69:'A',70:'A reg',71:'L1 L2 L3 P2 R1 R2 R3 reg th',72:'L1 L2 L3 P4 R1 R2 R3 reg th',73:'L1 L2 L3 P1 R1 R2 R3 reg th',74:'L1 L2 L3 R1 R2 R3 reg th',75:'L1 L2 L3 P5 R1 R2 R3 reg th',76:'L1 L2 L3 R1 R2 reg th',77:'L1 L2 L3 R1 reg th',78:'L1 L2 L3 R2 reg th',79:'L1 L2 L3 reg th',80:'L1 L2 L3 LA reg th',81:'L1 L2 reg th',82:'L1 L2 TR3 reg th',83:'L1 reg th',84:'reg th',85:'L2 L3 R1 R2 reg th',86:'L2 L3 P5 R1 reg th',87:'L2 L3 P5 R1 RL reg th',88:'L2 L3 P5 reg th',89:'L2 L3 LA P5 reg th',90:'L2 P5 reg th',91:'L2 P5 R1 R2 reg th',92:'L2 L3 P5 R1 RL reg th',93:'L2 L3 P5 S3 reg th',94:'L1 L2 L3 P4 R1 R2 R3 reg',95:'L1 L2 P1 R1 R2 reg th',96:'L1 P4 R1 reg th'};
-// [id, mão, x, y, rx, ry, rot] em coordenadas do diagrama (origem = orifício do polegar). E=esquerda (vermelho), D=direita (verde); x1/x2 = só decoração
-const CLAK=[['reg','E',0,-48,6.5,31,0],['th','E',0,0,12.5,12.5,0],['A','E',78,-42,8,35,0],['GS','E',107,-33,10,44,.1],
-['L1','E',73,14,13,13,0],['L2','E',73,60,13,13,0],['BB','E',92,73,17,4,-.4],['L3','E',79,99,9,9,0],['LA','E',84,112,26,6,.3],
-['x1','E',20,91,4,6,0],['x2','E',19,103,4,6,0],['TR2','E',27,121,5,6,0],['TR3','E',26,138,6,7,0],
-['S1','E',118,134,12,9,-.3],['S2','E',104,225,7,90,0],['S3','E',117,230,8,85,0],
-['R1','D',74,171,13,13,0],['R2','D',74,211,13,13,0],['RL','D',57,227,18,4,.2],['R3','D',73,251,16,16,0],
-['P1','D',43,277,17,9,.12],['P2','D',41,299,17,9,.12],['P2b','D',68,327,6,13,0],['P5','D',70,299,12,25,-.35],['P4','D',63,317,19,17,0]];
+// th=orifício do polegar, reg=chave de registro, A/GS=chaves de Lá e Sol♯ (indicador esq.), L1-L3=orifícios esq., LB/LC=alavancas do anelar esq.,
+// T1/T2=chaves de trinado, RB/S1/S2=chaves laterais do mínimo esq., R1-R3=orifícios dir., RL=alavanca dir., P1-P4=chaves do dedo mínimo dir.
+const CLAF={52:'L1 L2 L3 P3 R1 R2 R3 th',53:'L1 L2 L3 P4 R1 R2 R3 th',54:'L1 L2 L3 P1 R1 R2 R3 th',55:'L1 L2 L3 R1 R2 R3 th',56:'L1 L2 L3 P2 R1 R2 R3 th',57:'L1 L2 L3 R1 R2 th',58:'L1 L2 L3 R1 th',59:'L1 L2 L3 R2 th',60:'L1 L2 L3 th',61:'L1 L2 L3 LC th',62:'L1 L2 th',63:'L1 L2 T2 th',64:'L1 th',65:'th',66:'L1',67:'',68:'GS',69:'A',70:'A reg',71:'L1 L2 L3 P3 R1 R2 R3 reg th',72:'L1 L2 L3 P4 R1 R2 R3 reg th',73:'L1 L2 L3 P1 R1 R2 R3 reg th',74:'L1 L2 L3 R1 R2 R3 reg th',75:'L1 L2 L3 P2 R1 R2 R3 reg th',76:'L1 L2 L3 R1 R2 reg th',77:'L1 L2 L3 R1 reg th',78:'L1 L2 L3 R2 reg th',79:'L1 L2 L3 reg th',80:'L1 L2 L3 LC reg th',81:'L1 L2 reg th',82:'L1 L2 T2 reg th',83:'L1 reg th',84:'reg th',85:'L2 L3 R1 R2 reg th',86:'L2 L3 P2 R1 reg th',87:'L2 L3 P2 R1 RL reg th',88:'L2 L3 P2 reg th',89:'L2 L3 LC P2 reg th',90:'L2 P2 reg th',91:'L2 P2 R1 R2 reg th',92:'L2 L3 P2 R1 RL reg th',93:'L2 L3 P2 S2 reg th',94:'L1 L2 L3 P4 R1 R2 R3 reg',95:'L1 L2 P1 R1 R2 reg th',96:'L1 P4 R1 reg th'};
+const CLAALT={52:['L1 L2 L3 R1 R2 R3 S1 th','L1 L2 L3 P4 R1 R2 R3 S1 th'],53:['L1 L2 L3 R1 R2 R3 RB th'],54:['L1 L2 L3 R1 R2 R3 S2 th','L1 L2 L3 P4 R1 R2 R3 S2 th'],59:['L1 L2 L3 R1 RL th'],63:['L1 L2 LB th','L1 R1 th'],66:['T1 T2 th'],71:['L1 L2 L3 R1 R2 R3 S1 reg th','L1 L2 L3 P4 R1 R2 R3 S1 reg th'],72:['L1 L2 L3 R1 R2 R3 RB reg th'],73:['L1 L2 L3 R1 R2 R3 S2 reg th','L1 L2 L3 P4 R1 R2 R3 S2 reg th'],78:['L1 L2 L3 R1 RL reg th'],82:['L1 L2 LB reg th','L1 R1 reg th'],87:['L2 L3 P2 R2 reg th']};
 const SOL=['Dó','Dó♯','Ré','Mi♭','Mi','Fá','Fá♯','Sol','Sol♯','Lá','Si♭','Si'], LET=[0,0,1,2,2,3,3,4,4,5,6,6], ACC=['','♯','','♭','','','♯','','♯','','♭',''];
 function writtenOf(m){ let w=m+CLATYPES[claType].t; while(w>96) w-=12; while(w<52) w+=12; return w; }
 // Tipos de clarinete: t = semitons somados à nota real (MIDI) para obter a altura escrita (transposição)
 const CLATYPES={'sib':{n:'Clarinete em Si♭',t:2},'la':{n:'Clarinete em Lá',t:3},'mib':{n:'Requinta em Mi♭',t:-3},'do':{n:'Clarinete em Dó',t:0}};
 let claType='sib'; try{ const v=localStorage.getItem('claType'); if(CLATYPES[v]) claType=v; }catch(e){}
-const claFX=[];
+
+// Chaves desenhadas junto ao corpo, no mesmo desenho da tabela de digitação (unidades do diagrama; eixo do tubo em x=107).
+// [id, mão (E=vermelho / D=verde), tipo ('r'=aro de orifício, 'k'=chave/alavanca, 'd'=só decoração), peças]
+// peças: ['e',cx,cy,rx,ry,rot] = elipse · ['p',[[x,y],...],largura] = alavanca com pontas redondas
+const CLAK=[
+ ['reg','E','k',[['p',[[64,8],[63,50]],4],['e',63,55,8.5,13,0]]],
+ ['th','E','r',[['e',63,86,10.5,10.5,0]]],
+ ['A','E','k',[['p',[[109,10],[109,62]],3.6],['e',112,70,8.5,13,0]]],
+ ['GS','E','k',[['p',[[120,8],[121,40],[134,58]],5],['e',134,83,9.5,17,.12]]],
+ ['L1','E','r',[['e',107,100,10.5,10.5,0]]],
+ ['L2','E','r',[['e',107,146,10.5,10.5,0]]],
+ ['LB','E','k',[['p',[[101,170],[121,164],[135,156]],4.5],['p',[[134,141],[134,157]],3.6]]],
+ ['L3','E','r',[['e',111,185,8.2,8.2,0]]],
+ ['LC','E','k',[['p',[[84,174],[85,194],[95,207],[115,211],[126,205]],5],['e',130,202,13,9.5,.1]]],
+ ['x1','E','d',[['e',67,177,4,7,0]]],['x2','E','d',[['e',68,190,4,5.5,0]]],
+ ['T1','E','k',[['e',77,207,4.5,6.5,0]]],['T2','E','k',[['e',73,224,5,8,.2]]],
+ ['RB','E','k',[['e',140,219,13,8,-.35]]],
+ ['S1','E','k',[['e',128,240,9,15,0],['p',[[128,240],[128,300],[126,400]],6.5]]],
+ ['S2','E','k',[['e',142,246,6.5,13,0],['p',[[141,236],[140,260],[136,330],[133,400]],5]]],
+ ['R1','D','r',[['e',107,258,10.5,10.5,0]]],
+ ['R2','D','r',[['e',107,298,10.5,10.5,0]]],
+ ['RL','D','k',[['p',[[74,311],[90,316],[108,320]],4.5]]],
+ ['R3','D','r',[['e',107,337,12,12,0]]],
+ ['P1','D','k',[['e',76,361,17,9,.12]]],
+ ['P2','D','k',[['e',100,372,20,8.5,.16],['p',[[122,378],[122,411]],6]]],
+ ['P3','D','k',[['e',80,388,22,9,.2],['p',[[105,392],[105,452]],7]]],
+ ['P4','D','k',[['e',97,392,20,8.5,.25],['p',[[112,398],[113,447]],7]]]
+];
+const CLA_BB={x0:48,y0:2,x1:160,y1:456};
+function claPath(c,pr,X,Y,K){
+    pr.forEach(p=>{
+        if(p[0]==='e'){ c.moveTo(X(p[1])+p[3]*K,Y(p[2])); c.ellipse(X(p[1]),Y(p[2]),p[3]*K,p[4]*K,p[5],0,Math.PI*2); }
+    });
+}
+// desenha uma chave (um conjunto de peças): contorno unido + preenchimento
+function claKeyDraw(c,k,X,Y,K,a,hc,hl,light,sc){
+    const type=k[2], pr=k[3], on=a>0.01, ow=(type==='r'?3.2:2.4);
+    const lw=(w)=>Math.max(1.5,w*K);
+    const metal=light?'#aeb8c1':'#c7ced4', metalHi=light?'#e6ebef':'#eef1f3', edge=light?'#5d6c79':'#1b2127';
+    const each=fn=>pr.forEach(p=>fn(p));
+    const shape=(p,grow)=>{
+        c.beginPath();
+        if(p[0]==='e'){ c.ellipse(X(p[1]),Y(p[2]),(p[3]*sc+grow)*K,(p[4]*sc+grow)*K,p[5],0,Math.PI*2); }
+        else { p[1].forEach((q,i)=>i?c.lineTo(X(q[0]),Y(q[1])):c.moveTo(X(q[0]),Y(q[1]))); }
+    };
+    const stroke=(p,grow,col)=>{ shape(p,grow); if(p[0]==='e'){ c.fillStyle=col; c.fill(); } else { c.strokeStyle=col; c.lineWidth=lw(p[2]*sc)+grow*2*K; c.lineCap='round'; c.lineJoin='round'; c.stroke(); } };
+    if(type==='r'){
+        const p=pr[0];
+        // aro prateado do orifício + almofada
+        shape(p,ow); c.fillStyle=metal; c.fill(); c.lineWidth=1.6; c.strokeStyle=edge; c.stroke();
+        shape(p,0.2);
+        const g=c.createRadialGradient(X(p[1])-p[3]*K*.3,Y(p[2])-p[4]*K*.35,1,X(p[1]),Y(p[2]),p[3]*K*1.2); g.addColorStop(0,light?'#ffffff':'#2a3036'); g.addColorStop(1,light?'#dfe5ea':'#0d1013');
+        c.fillStyle=g; c.fill(); c.lineWidth=1.2; c.strokeStyle=light?'#8a99a6':'#38424b'; c.stroke();
+        if(on){ c.save(); c.globalAlpha=a; c.shadowColor=hc; c.shadowBlur=24*a;
+            shape(p,0); const og=c.createRadialGradient(X(p[1])-p[3]*K*.3,Y(p[2])-p[4]*K*.35,1,X(p[1]),Y(p[2]),p[3]*K*1.2); og.addColorStop(0,hl); og.addColorStop(1,hc);
+            c.fillStyle=og; c.fill(); c.shadowBlur=0; c.lineWidth=2.4; c.strokeStyle='#fff'; c.stroke(); c.restore(); }
+        return;
+    }
+    if(type==='d'){ c.save(); c.globalAlpha=0.55; each(p=>stroke(p,0.8,edge)); each(p=>stroke(p,0,metal)); c.restore(); return; }
+    // alavanca / chave: contorno escuro, metal prateado e, quando apertada, cor viva por cima
+    each(p=>stroke(p,1.1,edge));
+    each(p=>stroke(p,0,metal));
+    each(p=>{ if(p[0]==='p') stroke([p[0],p[1],p[2]*0.35],0,metalHi); });
+    if(on){ c.save(); c.globalAlpha=a; c.shadowColor=hc; c.shadowBlur=22*a; each(p=>stroke(p,0,hc)); c.shadowBlur=0; each(p=>{ if(p[0]==='p') stroke([p[0],p[1],p[2]*0.35],0,hl); else { shape(p,-1.6); c.fillStyle=hl; c.globalAlpha=a*0.35; c.fill(); } }); c.restore(); }
+}
+// painel só das chaves (digitação alternativa): sem corpo, só um fantasma do tubo para dar referência
+function claKeysOnly(c,X0,Y0,K,dn,light){
+    const X=x=>X0+(x-CLA_BB.x0)*K, Y=y=>Y0+(y-CLA_BB.y0)*K;
+    c.save(); c.fillStyle=light?'rgba(60,80,100,.10)':'rgba(255,255,255,.07)'; c.beginPath();
+    (c.roundRect?c.roundRect(X(90),Y(CLA_BB.y0),34*K,(CLA_BB.y1-CLA_BB.y0)*K,10*K):c.rect(X(90),Y(CLA_BB.y0),34*K,(CLA_BB.y1-CLA_BB.y0)*K)); c.fill(); c.restore();
+    const order=CLAK.slice().sort((a,b)=>(dn.has(a[0])?1:0)-(dn.has(b[0])?1:0));
+    order.forEach(k=>{ const hand=k[1]; const hc=hand==='E'?'#ef5350':'#43a047', hl=hand==='E'?'#ffb3b0':'#b9e8bc'; claKeyDraw(c,k,X,Y,K,dn.has(k[0])?1:0,hc,hl,light,1); });
+}
+const claA={ka:{},fx:[],rip:[],hp:{},lastPw:null,noteT:-1e9,emitT:0,amp:0,raf:0,lastT:0,altA:0,altLast:null};
+const claFX=claA.fx;
+const hexA=a=>Math.max(0,Math.min(255,Math.round(a))).toString(16).padStart(2,'0');
+function claKick(){ if(claA.raf||state.isPlaying) return; claA.raf=requestAnimationFrame(()=>{ claA.raf=0; drawPiano(); }); }
 function drawPiano(){
     const R=pianoCanvas.parentElement.getBoundingClientRect(), w=R.width, h=R.height, c=pianoCtx, light=isLight();
+    const now=performance.now(), dt=Math.max(0.2,Math.min(3,(now-(claA.lastT||now-16.7))/16.7)); claA.lastT=now;
     c.clearRect(0,0,w,h);
     const act=state.pianoKeys.filter(k=>k.isActive), top=act[act.length-1], ac=top?top.activeColor:'#6fd3e8';
     const pw=top?writtenOf(top.midi):null, down=new Set(top&&CLAF[pw]?CLAF[pw].split(' ').filter(Boolean):[]);
-    if(down.has('P2')) down.add('P2b');
-    const ink=light?'#3d5a73':'#9db4c8', s=Math.min(w/549,h/953), ox=(w-549*s)/2, oy=(h-953*s)/2, pos=[];
-    const K=1.9, CX=330, TY=235, fx=dx=>CX+(dx-73)*K, fy=dy=>TY+dy*K;
-    if(top){ const g=c.createRadialGradient(ox+CX*s,oy+420*s,0,ox+CX*s,oy+420*s,Math.max(w,h)*0.55); g.addColorStop(0,ac+'44'); g.addColorStop(1,'transparent'); c.fillStyle=g; c.fillRect(0,0,w,h); }
+    const ink=light?'#3d5a73':'#9db4c8', s=Math.min(w/549,h/953), ox=(w-549*s)/2, oy=(h-953*s)/2;
+    const K=1.45, CX=330, Y0=235, X=x=>CX+(x-107)*K, Y=y=>Y0+(y-41)*K, TW=25;
+    const T=(x,y)=>[ox+x*s,oy+y*s];
+    // ---- animação: chaves suaves, balanço, nota nova
+    const kk=1-Math.pow(0.6,dt); let busy=false;
+    CLAK.forEach(k=>{ const id=k[0], t=down.has(id)?1:0, v=claA.ka[id]||0, n=Math.abs(t-v)<0.015?t:v+(t-v)*kk; if(n!==v) busy=true; claA.ka[id]=n; });
+    if(pw!==claA.lastPw){ if(pw!==null) claA.noteT=now; claA.lastPw=pw; }
+    claA.amp+=((top?1:0)-claA.amp)*(1-Math.pow(0.9,dt)); if(Math.abs(claA.amp-(top?1:0))>0.01) busy=true; else claA.amp=top?1:0;
+    const pop=Math.max(0,1-(now-claA.noteT)/260); if(pop>0) busy=true;
+    const sway=Math.sin(now/460)*0.011*claA.amp, bob=Math.sin(now/310)*2.2*claA.amp;
+    const pulse=0.5+0.5*Math.sin(now/260);
+    if(top){ const [gx,gy]=T(CX,460), g=c.createRadialGradient(gx,gy,0,gx,gy,Math.max(w,h)*0.56); g.addColorStop(0,ac+hexA(50+34*pulse*claA.amp)); g.addColorStop(0.6,ac+'12'); g.addColorStop(1,'transparent'); c.fillStyle=g; c.fillRect(0,0,w,h); }
     c.save(); c.translate(ox,oy); c.scale(s,s);
-    // corpo do clarinete: ébano preto com anéis prateados (sem chaves)
-    const edge=light?'#2a3642':'#0a0d10', silver=light?'#8895a1':'#b7c2cc';
-    c.lineJoin='round'; c.lineCap='round';
-    const g=c.createLinearGradient(CX-34,0,CX+34,0); g.addColorStop(0,light?'#2b3844':'#0e1216'); g.addColorStop(0.35,light?'#566878':'#3a444e'); g.addColorStop(1,light?'#1f2b36':'#090b0e');
-    c.fillStyle=g; c.strokeStyle=edge; c.lineWidth=3;
-    const poly=P=>{ c.beginPath(); P.forEach((q,i)=>i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1])); c.closePath(); c.fill(); c.stroke(); };
-    poly([[CX-9,16],[CX+9,16],[CX+21,108],[CX-21,108]]);                 // bocal
-    poly([[CX-27,112],[CX+27,112],[CX+28,162],[CX-28,162]]);              // barrilete
-    poly([[CX-29,166],[CX+29,166],[CX+30,482],[CX-30,482]]);              // corpo superior
-    poly([[CX-31,486],[CX+31,486],[CX+32,800],[CX-32,800]]);              // corpo inferior
-    c.beginPath(); c.moveTo(CX-32,800); c.quadraticCurveTo(CX-38,880,CX-66,938); c.lineTo(CX+66,938); c.quadraticCurveTo(CX+38,880,CX+32,800); c.closePath(); c.fill(); c.stroke(); // campana
-    c.fillStyle=silver; [[CX-34,108,68],[CX-34,162,68],[CX-35,482,70],[CX-36,796,72],[CX-24,76,48]].forEach(([x,y,wd])=>{ c.beginPath(); c.roundRect(x,y,wd,7,3); c.fill(); });
-    c.fillStyle=silver; c.beginPath(); c.roundRect(CX-70,934,140,8,4); c.fill();
-    // pauta com a nota escrita + nome
-    const sp=11, pad=45, Y=q=>pad+7.5*sp-q*sp/2, sx0=10, sx1=165, nx=88;
+    // ---- pauta com a nota escrita + nome (fixa, não balança)
+    const sp=11, pad=45, YS=q=>pad+7.5*sp-q*sp/2, sx0=10, sx1=165, nx=88;
     c.strokeStyle=ink; c.lineWidth=1.5; c.globalAlpha=0.8;
-    for(let q=0;q<=8;q+=2){ c.beginPath(); c.moveTo(sx0,Y(q)); c.lineTo(sx1,Y(q)); c.stroke(); }
+    for(let q=0;q<=8;q+=2){ c.beginPath(); c.moveTo(sx0,YS(q)); c.lineTo(sx1,YS(q)); c.stroke(); }
     c.globalAlpha=1; c.fillStyle=top?'#fff':ink; c.font='700 56px Inter,sans-serif'; c.textAlign='left';
     if(top){
-        const pc=pw%12, q0=((Math.floor(pw/12)-1)*7+LET[pc])-30, yy=Y(q0);
-        c.strokeStyle=ink; for(let q=-2;q>=q0;q-=2){ c.beginPath(); c.moveTo(nx-16,Y(q)); c.lineTo(nx+16,Y(q)); c.stroke(); }
-        for(let q=10;q<=q0;q+=2){ c.beginPath(); c.moveTo(nx-16,Y(q)); c.lineTo(nx+16,Y(q)); c.stroke(); }
-        c.shadowColor=ac; c.shadowBlur=16; c.fillStyle=ac; c.beginPath(); c.ellipse(nx,yy,8.5,6,-0.3,0,Math.PI*2); c.fill(); c.shadowBlur=0;
-        c.font='26px sans-serif'; c.fillText(ACC[pc],nx-34,yy+9);
-        c.font='700 56px Inter,sans-serif'; c.fillStyle=light?'#14202b':'#fff'; c.fillText(SOL[pc],20,330);
+        const pc=pw%12, q0=((Math.floor(pw/12)-1)*7+LET[pc])-30, yy=YS(q0);
+        c.strokeStyle=ink; for(let q=-2;q>=q0;q-=2){ c.beginPath(); c.moveTo(nx-16,YS(q)); c.lineTo(nx+16,YS(q)); c.stroke(); }
+        for(let q=10;q<=q0;q+=2){ c.beginPath(); c.moveTo(nx-16,YS(q)); c.lineTo(nx+16,YS(q)); c.stroke(); }
+        c.save(); c.translate(nx,yy); c.scale(1+0.35*pop,1+0.35*pop); c.shadowColor=ac; c.shadowBlur=16; c.fillStyle=ac; c.beginPath(); c.ellipse(0,0,8.5,6,-0.3,0,Math.PI*2); c.fill(); c.shadowBlur=0;
+        c.font='26px sans-serif'; c.fillText(ACC[pc],-34,9); c.restore();
+        c.save(); c.translate(20,330); c.scale(1+0.18*pop,1+0.18*pop); c.font='700 56px Inter,sans-serif'; c.fillStyle=light?'#14202b':'#fff'; c.shadowColor=ac; c.shadowBlur=12*pop; c.fillText(SOL[pc],0,0); c.restore();
     } else c.fillText('♪',20,330);
-    // digitação: esquerda = vermelho, direita = verde (pressionadas por cima das chaves prateadas)
-    const keys=CLAK.slice().sort((a,b)=>(down.has(a[0])?1:0)-(down.has(b[0])?1:0));
-    keys.forEach(([id,hand,x,y,rx,ry,rot])=>{
-        const on=down.has(id), hc=hand==='E'?'#ef5350':'#66bb6a', X=fx(x), Yk=fy(y);
-        c.beginPath(); c.ellipse(X,Yk,rx*K,ry*K,rot,0,Math.PI*2);
-        if(on){ c.shadowColor=hc; c.shadowBlur=26; c.fillStyle=hc; if(id[0]!=='P'||id==='P1') pos.push([ox+X*s,oy+Yk*s,hc]); } else c.fillStyle=light?'#eef2f5':'#d3d9de';
-        c.fill(); c.shadowBlur=0; c.lineWidth=3; c.strokeStyle=on?'#fff':(light?'#6b7d8c':'#2a3238'); c.stroke();
+    // ---- instrumento (balança de leve quando toca)
+    c.save(); c.translate(CX,520+bob); c.rotate(sway); c.translate(-CX,-520);
+    const edge=light?'#26323d':'#07090b', silver=light?'#8895a1':'#b7c2cc';
+    c.lineJoin='round'; c.lineCap='round';
+    const bg=c.createLinearGradient(CX-34,0,CX+34,0); bg.addColorStop(0,light?'#26323d':'#0a0d10'); bg.addColorStop(0.32,light?'#51636f':'#39434c'); bg.addColorStop(0.7,light?'#2c3a46':'#171c21'); bg.addColorStop(1,light?'#1c2630':'#07090b');
+    c.fillStyle=bg; c.strokeStyle=edge; c.lineWidth=2.5;
+    const poly=P=>{ c.beginPath(); P.forEach((q,i)=>i?c.lineTo(q[0],q[1]):c.moveTo(q[0],q[1])); c.closePath(); c.fill(); c.stroke(); };
+    // bocal (boquilha) com ligadura
+    c.beginPath(); c.moveTo(CX-7,14); c.quadraticCurveTo(CX-8,40,CX-17,102); c.lineTo(CX+17,102); c.quadraticCurveTo(CX+8,40,CX+7,14); c.closePath(); c.fill(); c.stroke();
+    c.fillStyle=silver; c.beginPath(); c.roundRect(CX-20,70,40,26,5); c.fill(); c.strokeStyle=edge; c.lineWidth=1.6; c.stroke();
+    c.strokeStyle=light?'#5d6c79':'#55616b'; c.lineWidth=1.4; [78,88].forEach(yy=>{ c.beginPath(); c.moveTo(CX-17,yy); c.lineTo(CX+17,yy); c.stroke(); });
+    c.fillStyle=bg; c.strokeStyle=edge; c.lineWidth=2.5;
+    poly([[CX-24,104],[CX+24,104],[CX+28,128],[CX+28,176],[CX-28,176],[CX-28,128]]);   // barrilete
+    poly([[CX-TW,180],[CX+TW,180],[CX+TW,520],[CX-TW,520]]);                         // corpo superior
+    poly([[CX-TW-1,526],[CX+TW+1,526],[CX+TW+2,830],[CX-TW-2,830]]);                  // corpo inferior
+    c.beginPath(); c.moveTo(CX-TW-2,830); c.quadraticCurveTo(CX-TW-2,884,CX-60,936); c.lineTo(CX+60,936); c.quadraticCurveTo(CX+TW+2,884,CX+TW+2,830); c.closePath(); c.fill(); c.stroke(); // campana
+    c.fillStyle=silver; [[CX-30,102,60,6],[CX-30,174,60,7],[CX-TW-2,517,2*TW+4,10],[CX-TW-4,826,2*TW+8,8]].forEach(([x,y,wd,hh])=>{ c.beginPath(); c.roundRect(x,y,wd,hh,3); c.fill(); });
+    c.beginPath(); c.roundRect(CX-62,932,124,8,4); c.fill();
+    // brilho de madeira
+    c.globalAlpha=0.16; c.fillStyle='#fff'; c.fillRect(CX-TW+6,184,4,332); c.fillRect(CX-TW+6,530,4,296); c.globalAlpha=1;
+    // suporte do polegar (liga a chave de registro/polegar ao corpo)
+    c.fillStyle=light?'#9aa6b1':'#aab4bd'; c.strokeStyle=edge; c.lineWidth=1.6; c.beginPath(); c.roundRect(X(63),Y(86)-5,CX-TW+4-X(63),10,5); c.fill(); c.stroke();
+    // chaves, as apertadas por último
+    const keys=CLAK.slice().sort((a,b)=>(claA.ka[a[0]]||0)-(claA.ka[b[0]]||0)), pos=[];
+    keys.forEach(k=>{
+        const id=k[0], a=claA.ka[id]||0, hand=k[1], hc=hand==='E'?'#ef5350':'#43a047', hl=hand==='E'?'#ffb3b0':'#b9e8bc', sc=1-0.1*a*(k[2]==='r'?1:0);
+        if(k[2]!=='d'){
+            const p0=k[3][0], cx=p0[0]==='e'?p0[1]:p0[1][0][0], cy=p0[0]==='e'?p0[2]:p0[1][0][1];
+            if(a>0.35&&!claA.hp[id]){ claA.hp[id]=1; const q=T(X(cx),Y(cy)); claA.rip.push({x:q[0],y:q[1],r:6*s,l:1,col:hc,g:s}); }
+            if(a<0.2) claA.hp[id]=0;
+            if(a>0.6&&(k[2]==='r'||id==='reg'||id==='A'||id==='GS')) pos.push([ox+X(cx)*s,oy+Y(cy)*s,hc]);
+        }
+        claKeyDraw(c,k,X,Y,K,a,hc,hl,light,sc);
     });
+    c.restore(); // instrumento
+    // ---- digitações alternativas: só as chaves, em tamanho menor, ao lado do instrumento
+    const alts=(top&&CLAALT[pw])||[];
+    claA.altA+=((alts.length?1:0)-claA.altA)*(1-Math.pow(0.7,dt)); if(Math.abs(claA.altA-(alts.length?1:0))>0.01) busy=true; else claA.altA=alts.length?1:0;
+    if(alts.length) claA.altLast=alts;
     c.restore();
-    // partículas musicais saindo das chaves pressionadas
-    if(pos.length&&Math.random()<0.7){ const q=pos[Math.floor(Math.random()*pos.length)]; claFX.push({x:q[0],y:q[1],vx:(Math.random()-.5)*1.4,vy:-(1+Math.random()*1.6),l:1,col:q[2],ch:Math.random()<0.5?'♪':'♫'}); }
-    for(let i=claFX.length-1;i>=0;i--){ const f=claFX[i]; f.x+=f.vx; f.y+=f.vy; f.l-=0.014;
+    if(claA.altA>0.01&&claA.altLast){
+        const L=claA.altLast, n=L.length, bw=CLA_BB.x1-CLA_BB.x0, bh=CLA_BB.y1-CLA_BB.y0, gap=8, label=18;
+        const regionX=ox+(X(142)+22)*s, availW=w-regionX-6, topY=44, availH=h-topY-8;
+        const kV=Math.min((availH-n*label-(n-1)*gap)/(n*bh), availW/bw), kH=Math.min((availH-label)/bh, (availW-(n-1)*gap)/(n*bw));
+        const side=kH>kV*1.02&&n>1, k=Math.max(0.1,Math.min(side?kH:kV,s*0.62));
+        const totW=side?n*bw*k+(n-1)*gap:bw*k, X0=w-6-totW-(side?0:Math.max(0,(availW-bw*k)/2));
+        c.save(); c.globalAlpha=claA.altA;
+        L.forEach((fing,ix)=>{
+            const XX=side?X0+ix*(bw*k+gap):X0, YY=topY+label+(side?0:ix*(bh*k+label+gap)), dn=new Set(fing.split(' ').filter(Boolean));
+            c.fillStyle=light?'rgba(255,255,255,.62)':'rgba(0,0,0,.4)'; c.strokeStyle=light?'rgba(60,90,120,.4)':'rgba(255,255,255,.16)'; c.lineWidth=1;
+            c.beginPath(); (c.roundRect?c.roundRect(XX-5,YY-5,bw*k+10,bh*k+10,10):c.rect(XX-5,YY-5,bw*k+10,bh*k+10)); c.fill(); c.stroke();
+            c.fillStyle=ink; c.font='600 11px Inter,sans-serif'; c.textAlign='left';
+            c.fillText(n>1?'ou (alt. '+(ix+1)+')':'ou (alternativa)',XX-4,YY-10);
+            claKeysOnly(c,XX,YY,k,dn,light);
+        });
+        c.restore();
+    }
+    // ---- ondas sonoras saindo da campana
+    if(claA.amp>0.02){
+        c.save(); c.translate(ox,oy); c.scale(s,s);
+        for(let q=0;q<3;q++){ const ph=((now/1000)*0.9+q/3)%1, rr=30+ph*70;
+            c.strokeStyle=ac+hexA((1-ph)*120*claA.amp); c.lineWidth=4*(1-ph)+1; c.beginPath(); c.arc(CX,944,rr,Math.PI*1.1,Math.PI*1.9); c.stroke(); }
+        c.restore();
+    }
+    // ---- partículas musicais saindo das chaves pressionadas + ondulações
+    if(pos.length&&now-claA.emitT>(claA.noteT>now-120?55:170)){ claA.emitT=now;
+        const nq=pop>0.5?2:1;
+        for(let q=0;q<nq;q++){ const p=pos[Math.floor(Math.random()*pos.length)];
+            claFX.push({x:p[0],y:p[1],vx:(Math.random()-.5)*1.3,vy:-(0.9+Math.random()*1.3),l:1,d:0.009+Math.random()*0.008,col:p[2],ch:['♪','♫','♩','♬'][Math.floor(Math.random()*4)],rot:(Math.random()-.5)*.5,vr:(Math.random()-.5)*.05,sz:(15+Math.random()*10)*Math.max(.8,s*1.1),ph:Math.random()*6.28}); } }
+    while(claFX.length>70) claFX.shift();
+    for(let i=claA.rip.length-1;i>=0;i--){ const r=claA.rip[i]; r.r+=1.6*r.g*dt; r.l-=0.055*dt;
+        if(r.l<=0){ claA.rip.splice(i,1); continue; }
+        c.globalAlpha=r.l*0.8; c.strokeStyle=r.col; c.lineWidth=3*r.l+1; c.beginPath(); c.arc(r.x,r.y,r.r,0,Math.PI*2); c.stroke(); }
+    for(let i=claFX.length-1;i>=0;i--){ const f=claFX[i]; f.x+=f.vx+Math.sin(f.ph+f.l*7)*0.5*dt; f.y+=f.vy*dt; f.rot+=f.vr*dt; f.l-=f.d*dt;
         if(f.l<=0){ claFX.splice(i,1); continue; }
-        c.globalAlpha=f.l; c.fillStyle=f.col; c.shadowColor=f.col; c.shadowBlur=12; c.font='bold 20px sans-serif'; c.textAlign='left'; c.fillText(f.ch,f.x,f.y); }
+        c.save(); c.translate(f.x,f.y); c.rotate(f.rot); c.globalAlpha=Math.min(1,f.l*1.6)*0.95; c.fillStyle=f.col; c.shadowColor=f.col; c.shadowBlur=12;
+        c.font='bold '+f.sz.toFixed(1)+'px sans-serif'; c.textAlign='center'; c.fillText(f.ch,0,0); c.restore(); }
     c.globalAlpha=1; c.shadowBlur=0; c.textAlign='start';
+    if(!state.isPlaying&&(busy||claFX.length||claA.rip.length)) claKick();
 }
 
 function noteX(midi,cw){ return (midi-state.lowestNote)*cw/(state.highestNote-state.lowestNote+1); }
@@ -1153,6 +1690,59 @@ window.addEventListener('DOMContentLoaded',()=>{
     sel.addEventListener('change',()=>{ claType=sel.value; try{localStorage.setItem('claType',claType);}catch(e){} drawPiano(); });
     box.appendChild(sel);
 });
+
+
+// ======================== HINÁRIO (480 hinos em hinos/*.mxl) ========================
+// lista dos 480 hinos embutida no app (não depende de nenhum outro arquivo)
+const HYMN_INDEX=[{"n":1,"file":"001.mxl","title":"Cristo, meu Mestre...","author":"Leila Naylor Morris"},{"n":2,"file":"002.mxl","title":"De Deus tu és eleita","author":"Samuel Sebastian Wesley"},{"n":3,"file":"003.mxl","title":"Faz-nos ouvir Tua voz","author":""},{"n":4,"file":"004.mxl","title":"Ouve a nossa oração","author":"Bentley Deforest Ackley"},{"n":5,"file":"005.mxl","title":"A Rocha celestial","author":"Leila Naylor Morris"},{"n":6,"file":"006.mxl","title":"Glória ao Justo, fiel Cordeiro!","author":""},{"n":7,"file":"007.mxl","title":"Granjeai, granjeai os talentos","author":"João Dieners"},{"n":8,"file":"008.mxl","title":"Oh! Vem, sim, vem","author":"Peter Philip Bilhorn"},{"n":9,"file":"009.mxl","title":"Luminosa é a senda","author":"Silas Jones Vail"},{"n":10,"file":"010.mxl","title":"Prossegui vitoriosos em Cristo","author":""},{"n":11,"file":"011.mxl","title":"Ó igreja de Deus, resplandece","author":"William Savage Pitts"},{"n":12,"file":"012.mxl","title":"Sempre em Jesus confiarei","author":"James Milton Black"},{"n":13,"file":"013.mxl","title":"Confiemos em Deus","author":"Stephen Vincent Benet"},{"n":14,"file":"014.mxl","title":"Manda os Teus dons celestes","author":""},{"n":15,"file":"015.mxl","title":"Ó alma que choras","author":"Philip Paul Bliss"},{"n":16,"file":"016.mxl","title":"Promessa excelente","author":"Charles Hutchinson Gabriel"},{"n":17,"file":"017.mxl","title":"Ó Senhor, vem visitar-me","author":""},{"n":18,"file":"018.mxl","title":"É Jesus meu Refúgio","author":"Charles Austin Miles"},{"n":19,"file":"019.mxl","title":"Manda-nos Teu Poder","author":"Barney Elliott Warren"},{"n":20,"file":"020.mxl","title":"Teu Espírito derrama","author":"Charles Davis Tillman"},{"n":21,"file":"021.mxl","title":"Não mais oprimidos seremos","author":"Frederick Martin Lehman"},{"n":22,"file":"022.mxl","title":"Guia-me, ó Senhor","author":"William James Kirkpatrick"},{"n":23,"file":"023.mxl","title":"O Senhor é o meu Pastor","author":"Ira David Sankey"},{"n":24,"file":"024.mxl","title":"Dá-me graça, Senhor","author":""},{"n":25,"file":"025.mxl","title":"Um grande bem, precioso bem","author":"Edward Francis Rimbault"},{"n":26,"file":"026.mxl","title":"Julga-me, Senhor","author":"William James Kirkpatrick"},{"n":27,"file":"027.mxl","title":"O Senhor é minha Luz","author":""},{"n":28,"file":"028.mxl","title":"Para o ceú marchemos","author":"John Robson Sweney"},{"n":29,"file":"029.mxl","title":"Senhor Jesus, Tu és o meu Rochedo","author":"Peter Philip Bilhorn"},{"n":30,"file":"030.mxl","title":"Confiarei sempre no Senhor","author":""},{"n":31,"file":"031.mxl","title":"Forte Rocha","author":"Martin Luther"},{"n":32,"file":"032.mxl","title":"Eu me escondo em Ti, Senhor","author":"Hubert Platt Main"},{"n":33,"file":"033.mxl","title":"Jesus é o nosso Guia","author":"Charles Hutchinson Gabriel"},{"n":34,"file":"034.mxl","title":"O Mestre que desceu dos ceús","author":"William Vincent Wallace"},{"n":35,"file":"035.mxl","title":"Eis que multidão mui grande","author":"Thoro Harris"},{"n":36,"file":"036.mxl","title":"A fiel proteção","author":"Joseph Lincoln Hall"},{"n":37,"file":"037.mxl","title":"Se a nossa vida entregarmos a Jesus","author":"Thoro Harris"},{"n":38,"file":"038.mxl","title":"Ó Senhor, és minha Vida","author":"George Mursell Garrett"},{"n":39,"file":"039.mxl","title":"Eu desejo, Senhor","author":"Daniel Brink Towner"},{"n":40,"file":"040.mxl","title":"Quando em mim Tu operaste","author":"George Stark Schuler"},{"n":41,"file":"041.mxl","title":"O teu coração vem a Cristo entregar","author":"Philip Paul Bliss"},{"n":42,"file":"042.mxl","title":"Ó minha alma, por que te abates?","author":""},{"n":43,"file":"043.mxl","title":"Trema o céu, a terra, o mar","author":"John Robson Sweney"},{"n":44,"file":"044.mxl","title":"Sol da justiça","author":"George Harrison Cook"},{"n":45,"file":"045.mxl","title":"Oh! Quanto nos amaste!","author":""},{"n":46,"file":"046.mxl","title":"Grandioso é o nosso Deus","author":"Will Lamartine Thompson"},{"n":47,"file":"047.mxl","title":"Sublime é o perdão!","author":""},{"n":48,"file":"048.mxl","title":"Creio no Senhor","author":"John Thomas Grape"},{"n":49,"file":"049.mxl","title":"Venho adorar-Te, santo Criador","author":"Melodia maori"},{"n":50,"file":"050.mxl","title":"Glória a Jesus! Aleluia!","author":"Thoro Harris"},{"n":51,"file":"051.mxl","title":"A Palavra do Senhor é Pão celestial","author":"Grant Colfax Tullar"},{"n":52,"file":"052.mxl","title":"Luz eternal é Jesus","author":""},{"n":53,"file":"053.mxl","title":"Nós somos luz do mundo","author":""},{"n":54,"file":"054.mxl","title":"Um tesouro glorioso achei","author":"Leila Naylor Morris"},{"n":55,"file":"055.mxl","title":"Paz seja em vós","author":"Horatio Richmond Palmer"},{"n":56,"file":"056.mxl","title":"Põe em Deus a confiança","author":"Robert Lowry"},{"n":57,"file":"057.mxl","title":"É estreia a porta para a Salvação","author":"Lewis Edgar Jones"},{"n":58,"file":"058.mxl","title":"Sou crente em Jesus","author":"William Batchelder Bradbury"},{"n":59,"file":"059.mxl","title":"Faz-me mais perseverante","author":""},{"n":60,"file":"060.mxl","title":"Oh! Vem a Jesus","author":"James Milton Black"},{"n":61,"file":"061.mxl","title":"A minha alma deseja ver-Te","author":"Ralpha Erskine Hudson"},{"n":62,"file":"062.mxl","title":"Ó Criador, forte Rocha és","author":"Hugh Wilson"},{"n":63,"file":"063.mxl","title":"Se vós baterdes, Ele vos abre","author":"John Robson Sweney"},{"n":64,"file":"064.mxl","title":"Tu, que vives sem destino","author":""},{"n":65,"file":"065.mxl","title":"Igual ao Mestre!","author":"Charles Hutchinson Gabriel"},{"n":66,"file":"066.mxl","title":"Cansado estás? Vem a Jesus","author":""},{"n":67,"file":"067.mxl","title":"\"Vinde a Mim!\"","author":"James McGranaham"},{"n":68,"file":"068.mxl","title":"Sem tardar, vai a Cristo","author":"Charles Clinton Case"},{"n":69,"file":"069.mxl","title":"A família de Jesus","author":"Frederick Charles Maker"},{"n":70,"file":"070.mxl","title":"Senhor, Tu és a minha Esperança","author":""},{"n":71,"file":"071.mxl","title":"Ó Senhor Jesus, eu recorro a Ti","author":""},{"n":72,"file":"072.mxl","title":"Nome glorioso, o de Jesus!","author":"John Hart Stockton"},{"n":73,"file":"073.mxl","title":"Semearei, semearei","author":"George Coles Stebbins"},{"n":74,"file":"074.mxl","title":"Vamos produzir frutos de louvor","author":"Henry Southwick Perkins"},{"n":75,"file":"075.mxl","title":"Vem a Jesus, ó alma errante","author":"Ethelbert William Bullinger"},{"n":76,"file":"076.mxl","title":"Cristo Jesus Sua mão me dá","author":"Norman John Clayton"},{"n":77,"file":"077.mxl","title":"Vamos lançar a semente","author":"James McGranahan"},{"n":78,"file":"078.mxl","title":"Glória a Jesus! Glória a Jesus!","author":"Philip Paul Bliss"},{"n":79,"file":"079.mxl","title":"Bom é estarmos nós aqui","author":"William Howard Doane"},{"n":80,"file":"080.mxl","title":"Por Cristo, resgatado","author":"Norman Jhon Clayton"},{"n":81,"file":"081.mxl","title":"A vida deu por ti","author":"Philip Paul Bliss"},{"n":82,"file":"082.mxl","title":"Oh! Que grande amor!","author":""},{"n":83,"file":"083.mxl","title":"Vinde às bodas","author":"Henry Barraclough"},{"n":84,"file":"084.mxl","title":"Quão amável é a Tua casa","author":"William Batchelder Bradbury"},{"n":85,"file":"085.mxl","title":"Anunciai o santo Evangelho","author":"(Batismo)"},{"n":86,"file":"086.mxl","title":"Grande Tu és, ó Pai","author":"William Marion Runyan"},{"n":87,"file":"087.mxl","title":"Eis que vem Jesus","author":"William James Kirkpatrick"},{"n":88,"file":"088.mxl","title":"Minha oração","author":"Bertha Mae Lillenas"},{"n":89,"file":"089.mxl","title":"Oh! Grande Deus","author":""},{"n":90,"file":"090.mxl","title":"Teu destino é a glória","author":"Dora Boole"},{"n":91,"file":"091.mxl","title":"No esconderijo do Onipotente","author":"Ira David Sankey"},{"n":92,"file":"092.mxl","title":"O santo Evangelho","author":"Samuel Wesley Martin"},{"n":93,"file":"093.mxl","title":"Aceitando ao Senhor...","author":"Thomas Hastings"},{"n":94,"file":"094.mxl","title":"Quem sustenta a nossa vida","author":""},{"n":95,"file":"095.mxl","title":"\"Vinde, ó benditos de Meu Pai\"","author":""},{"n":96,"file":"096.mxl","title":"Vinde, adoremos a Deus","author":"Felice De Giardini"},{"n":97,"file":"097.mxl","title":"Cristo Jesus, nosso bom Pastor","author":"Harry Dixon Loes"},{"n":98,"file":"098.mxl","title":"Cristo Jesus tudo pode","author":"Harry Dixon Loes"},{"n":99,"file":"099.mxl","title":"Jesus Cristo é o Amigo celestial","author":"Lance Brenton Latham"},{"n":100,"file":"100.mxl","title":"Todos juntos, jubilemos","author":"J. W. Henderson"},{"n":101,"file":"101.mxl","title":"Cantemos, juntos, louvores a Deus","author":"Robert Alexander Schumann"},{"n":102,"file":"102.mxl","title":"Sinto a voz divina do meu fiel Pastor","author":"Leander Lycurgus Pickett"},{"n":103,"file":"103.mxl","title":"Bendize, ó minha alma","author":"William Howard Doane"},{"n":104,"file":"104.mxl","title":"Santo, Santo és, Senhor","author":"John Jenkins Husband"},{"n":105,"file":"105.mxl","title":"Volta ao teu lar Paternal!","author":"Charles Hutchinson Gabriel"},{"n":106,"file":"106.mxl","title":"Em nome do nosso Redentor","author":"Edwin Othello Excell"},{"n":107,"file":"107.mxl","title":"O fim de tudo chegará","author":""},{"n":108,"file":"108.mxl","title":"É Jesus a Fonte de riqueza","author":""},{"n":109,"file":"109.mxl","title":"Vem, ó Senhor, ajudar-me","author":""},{"n":110,"file":"110.mxl","title":"Vigiai, irmãos","author":"William James Kirkpatrick"},{"n":111,"file":"111.mxl","title":"Do sepulcro ressurgiu triunfante","author":"Melodia sueca"},{"n":112,"file":"112.mxl","title":"Sigamos sempre ao Senhor","author":""},{"n":113,"file":"113.mxl","title":"O Senhor seja louvado","author":"Margaret Jenkins Harris"},{"n":114,"file":"114.mxl","title":"Clama ao Mestre, Cristo Jesus","author":"Edmund Simon Lorenz"},{"n":115,"file":"115.mxl","title":"Minha alma engrandece...","author":"James Bownman Overton Clem"},{"n":116,"file":"116.mxl","title":"Amo ao Senhor","author":"Frederick Arthur Challinor"},{"n":117,"file":"117.mxl","title":"Jesus habita em meu coração","author":"Alfred Henry Ackley"},{"n":118,"file":"118.mxl","title":"Fiel Salvador é Jesus","author":"William James Kirkpatrick"},{"n":119,"file":"119.mxl","title":"Luz aos meus pés é a Tua Palavra","author":"M. L. Bradshaw"},{"n":120,"file":"120.mxl","title":"Nossa cruz tomemos","author":"Arthur Seymour Sullivan"},{"n":121,"file":"121.mxl","title":"O meu socorro vem do Senhor","author":"Philip Paul Bliss"},{"n":122,"file":"122.mxl","title":"Alegrei-me quando me disseram...","author":"Albert Simpson Reitz"},{"n":123,"file":"123.mxl","title":"Ó Jesus, és meu Guardião","author":"Louis Moreau Gottschalk"},{"n":124,"file":"124.mxl","title":"Vivo na graça","author":"May Whittle Moody"},{"n":125,"file":"125.mxl","title":"Mais grato a Ti","author":"William James Kirkpatrick"},{"n":126,"file":"126.mxl","title":"Levemos a mensagem de amor","author":"Isaiah Baltzell"},{"n":127,"file":"127.mxl","title":"Meu bom Jesus, Contigo almejo estar","author":"Stephen Collins Foster"},{"n":128,"file":"128.mxl","title":"Teu filho sou, ó Criador","author":""},{"n":129,"file":"129.mxl","title":"Salvo estou por Jesus","author":"John Robson Sweney"},{"n":130,"file":"130.mxl","title":"A minha alma","author":"Ballington Booth"},{"n":131,"file":"131.mxl","title":"Ó Senhor glorioso, Deus da perfeição","author":"Frederick William Blunt"},{"n":132,"file":"132.mxl","title":"Eis-me, Senhor, aos Teus pés","author":""},{"n":133,"file":"133.mxl","title":"Quão bom e quão suave é...","author":""},{"n":134,"file":"134.mxl","title":"Teu amor, ó Cordeiro divinal","author":"Ralph Erskine Hudson"},{"n":135,"file":"135.mxl","title":"Bendito o Rei que veio do céu!","author":"Lowell Mason"},{"n":136,"file":"136.mxl","title":"Benignidade eterna é a de Deus","author":""},{"n":137,"file":"137.mxl","title":"Senhor, vem selar-nos","author":"Edwin Othello Excell"},{"n":138,"file":"138.mxl","title":"Louvemos ao bom Jesus","author":""},{"n":139,"file":"139.mxl","title":"Ó Senhor, Tu me conheces","author":"Lowell Mason"},{"n":140,"file":"140.mxl","title":"Sou feliz","author":""},{"n":141,"file":"141.mxl","title":"Cristo, o Verbo","author":"George A. Young"},{"n":142,"file":"142.mxl","title":"Ó Pai celestial","author":"William Marion Runyan"},{"n":143,"file":"143.mxl","title":"Porfiemos, irmãos, por entrar nos céus","author":"John B. Vaughan"},{"n":144,"file":"144.mxl","title":"A vida eterna","author":"Antoine Édouard Batiste"},{"n":145,"file":"145.mxl","title":"Pródigo filho, vai!","author":"Peter Philip Bihorn"},{"n":146,"file":"146.mxl","title":"De Deus veio a Luz","author":"Georg Friedrich Händel"},{"n":147,"file":"147.mxl","title":"É bom louvar ao Criador","author":"William Gustavus Fischer"},{"n":148,"file":"148.mxl","title":"Louvor a Deus, o Criador","author":"James Milton Black"},{"n":149,"file":"149.mxl","title":"Ó irmãos, por fé, louvemos a Jesus","author":"Herbert Henry Howard Booth"},{"n":150,"file":"150.mxl","title":"Jesus Cristo, meu Senhor","author":"George Edstrom"},{"n":151,"file":"151.mxl","title":"Se, de Cristo, o Nome amares","author":"William Howard Doane"},{"n":152,"file":"152.mxl","title":"Venho à casa do Senhor","author":"Bentley Deforest Ackley"},{"n":153,"file":"153.mxl","title":"O divinal Cordeiro","author":"George James Webb"},{"n":154,"file":"154.mxl","title":"Terá que renascer","author":"George Coles Stebbins"},{"n":155,"file":"155.mxl","title":"Olha a Cristo, o Redentor","author":"John G. Foote"},{"n":156,"file":"156.mxl","title":"John Robson Sweney","author":"Cristo entrou nos céus primeiro"},{"n":157,"file":"157.mxl","title":"Ouve a voz que te convida...","author":"William Howard Doane"},{"n":158,"file":"158.mxl","title":"Meu lar está no céu","author":""},{"n":159,"file":"159.mxl","title":"Deus amou o mundo","author":"Thoro Harris"},{"n":160,"file":"160.mxl","title":"\"Sou o Caminho, a Verdade e a Vida\"","author":"William Henry Monk"},{"n":161,"file":"161.mxl","title":"Cristo quer salvar","author":"Margaret Jankins Harris"},{"n":162,"file":"162.mxl","title":"Cristo salvou-me","author":""},{"n":163,"file":"163.mxl","title":"Neste mundo de ilusão","author":"Robert Harkness"},{"n":164,"file":"164.mxl","title":"Louvemos sempre alegres","author":"Lowell Mason"},{"n":165,"file":"165.mxl","title":"Foi o Senhor Jesus","author":"Elisha Albright Hoffman"},{"n":166,"file":"166.mxl","title":"A graça inefável de Deus","author":"J. E. French"},{"n":167,"file":"167.mxl","title":"Água viva","author":"Thoro Harris"},{"n":168,"file":"168.mxl","title":"A Palavra do Senhor","author":""},{"n":169,"file":"169.mxl","title":"Aos pés de Deus estamos","author":""},{"n":170,"file":"170.mxl","title":"Pai eternal, envia dos céus...","author":"John Robson Sweney"},{"n":171,"file":"171.mxl","title":"Vida eterna! Vida eterna!","author":"Alfred Barney Smith"},{"n":172,"file":"172.mxl","title":"Um culto santo ao Senhor","author":"(Encerramento)"},{"n":173,"file":"173.mxl","title":"Para ouvir aqui estamos","author":"Peter Philip Bilhorn"},{"n":174,"file":"174.mxl","title":"Vem atender ao Seu chamado","author":"R. L. Blowers"},{"n":175,"file":"175.mxl","title":"O Senhor Jesus te chama","author":"Maude Anita Hart"},{"n":176,"file":"176.mxl","title":"Por Ti vivo, ó Deus potente","author":"James McGranahan"},{"n":177,"file":"177.mxl","title":"Eu necessito achegar-me","author":"James McGranahan"},{"n":178,"file":"178.mxl","title":"Philip Paul Bliss","author":"A Palavra preciosa"},{"n":179,"file":"179.mxl","title":"Trabalhai! Trabalhai!","author":"William Howard Doane"},{"n":180,"file":"180.mxl","title":"Jesus é a Luz que veio ao mundo...","author":"William James Kirkpatrick"},{"n":181,"file":"181.mxl","title":"Só em Cristo, só em Cristo","author":"Minnie A. Steele"},{"n":182,"file":"182.mxl","title":"Brevemente retornará Jesus Cristo","author":"Jhon Edgar Gould"},{"n":183,"file":"183.mxl","title":"Cristo Jesus é a Porta dos céus","author":"William James Kirkpatrick"},{"n":184,"file":"184.mxl","title":"Nós Te louvamos, por fé, grande Deus","author":"Peter Ritter"},{"n":185,"file":"185.mxl","title":"Deus mandou Sua Luz","author":"Charles Hutchinson Gabriel"},{"n":186,"file":"186.mxl","title":"Cristo, Luz do mundo","author":"Charles Hutchinson Gabriel"},{"n":187,"file":"187.mxl","title":"Jesus Cristo habita em nós","author":"Ira David Sankey"},{"n":188,"file":"188.mxl","title":"O Mestre habita em mim","author":"Charles Hutchinson Gabriel"},{"n":189,"file":"189.mxl","title":"Oh! Que preciosa paz","author":"Luther Burgess Bridgers"},{"n":190,"file":"190.mxl","title":"Amados, não temamos","author":"Charles Austin Miles"},{"n":191,"file":"191.mxl","title":"Vem, vem consolar-me","author":"Leila Naylor Morris"},{"n":192,"file":"192.mxl","title":"Quão fiel promessa Jesus nos fez","author":"Charles Austin Miles"},{"n":193,"file":"193.mxl","title":"Nada jamais me faltará","author":"Charles Hutchinson Gabriel"},{"n":194,"file":"194.mxl","title":"\"Vós chorareis e vos lamentareis\"","author":"Cleland Boyd McAfee"},{"n":195,"file":"195.mxl","title":"Senhor, estou disposto","author":""},{"n":196,"file":"196.mxl","title":"Sem Deus Pai","author":"Melodia Italiana"},{"n":197,"file":"197.mxl","title":"Senhor, por Teu poder","author":"Eli G. Christy"},{"n":198,"file":"198.mxl","title":"Nosso Pai celeste sabe e provê","author":"Josie Wallace"},{"n":199,"file":"199.mxl","title":"Senhor, Tu és a minha Porção","author":"James McGranahan"},{"n":200,"file":"200.mxl","title":"\"Não se turbe o vosso coração\"","author":""},{"n":201,"file":"201.mxl","title":"Deus nos guarde...","author":"William Gould Tomer"},{"n":202,"file":"202.mxl","title":"Em Ti me alegro, Senhor","author":"Daniel Brink Towner"},{"n":203,"file":"203.mxl","title":"Ballington Booth","author":"O meu vero Amigo é Jesus"},{"n":204,"file":"204.mxl","title":"Só Jesus é Amigo verdadeiro","author":"Charles Frederick Weigle"},{"n":205,"file":"205.mxl","title":"Salvo por Seu poder","author":"Jack P. Scholfield"},{"n":206,"file":"206.mxl","title":"Tu és o Amigo","author":"Louis D. Eichhorn"},{"n":207,"file":"207.mxl","title":"Cristo é fiel","author":"Arthur Abner Luther"},{"n":208,"file":"208.mxl","title":"Conserva a paz, ó minha alma","author":"Jean Sibelius"},{"n":209,"file":"209.mxl","title":"Oh! Marchai, soldados","author":"William Wallace Coe"},{"n":210,"file":"210.mxl","title":"Grandes promessas","author":"Carl Maria Friedrich Ernest von Weber"},{"n":211,"file":"211.mxl","title":"O Senhor Jesus passava...","author":"Joseph Perry Holbrook"},{"n":212,"file":"212.mxl","title":"Testemunhas verazes nós somos","author":"Henry Ernest Nichol"},{"n":213,"file":"213.mxl","title":"Quando vier do céu","author":"Theodore Edson Perkins"},{"n":214,"file":"214.mxl","title":"Como foi para os céus, assim virá","author":"James M. Kirk"},{"n":215,"file":"215.mxl","title":"Em breve ao céu irei","author":"Barney Elliott Warren"},{"n":216,"file":"216.mxl","title":"Irmãos, amemos ao Senhor","author":"Joseph Lincoln Hall"},{"n":217,"file":"217.mxl","title":"Vamos, unidos, a Deus louvar","author":"Howard E. Smith"},{"n":218,"file":"218.mxl","title":"Oh! Jubilemos, devotos de Cristo","author":"Willian Letton Viner, Jr."},{"n":219,"file":"219.mxl","title":"Novos céus nós aguardamos","author":"George Bennard"},{"n":220,"file":"220.mxl","title":"Cristo voltará","author":"George Austin Minor"},{"n":221,"file":"221.mxl","title":"A descida do Espírito Santo","author":"Robert Lowry"},{"n":222,"file":"222.mxl","title":"Brevemente virá o Senhor Jesus","author":""},{"n":223,"file":"223.mxl","title":"Muitos, por fé, aceitaram Jesus","author":"Thoro Harris"},{"n":224,"file":"224.mxl","title":"Só Jesus concede paz e salvação","author":"Ira David Sankey"},{"n":225,"file":"225.mxl","title":"Senhor, com Tua voz me chamas","author":""},{"n":226,"file":"226.mxl","title":"A história do Evangelho","author":"Joseph Lincoln Hall"},{"n":227,"file":"227.mxl","title":"Procuras tu ao Salvador?","author":""},{"n":228,"file":"228.mxl","title":"Salvação! Salvação!","author":"William James Kirkpatrick"},{"n":229,"file":"229.mxl","title":"Eu vivia no pecado","author":"Bentley Deforest Ackley"},{"n":230,"file":"230.mxl","title":"A Ti rendemos graças","author":"Oliver Holden"},{"n":231,"file":"231.mxl","title":"Provemos, irmãos, do amor do Senhor","author":"Bentley DeForest Ackley"},{"n":232,"file":"232.mxl","title":"Seguro estou...","author":""},{"n":233,"file":"233.mxl","title":"Avante, santos e fiéis de Deus","author":"Leila Naylor Morris"},{"n":234,"file":"234.mxl","title":"O meu ser entrego a Cristo","author":"Winfield Scott Weeden"},{"n":235,"file":"235.mxl","title":"Um amor imenso","author":"Franz Josef Haydn"},{"n":236,"file":"236.mxl","title":"Há um lugar de eterna paz","author":"Flora Hamilton Cassel"},{"n":237,"file":"237.mxl","title":"Deus é por mim","author":""},{"n":238,"file":"238.mxl","title":"Teu servo ouve; fala, Senhor","author":"Albert Simpson Reitz"},{"n":239,"file":"239.mxl","title":"Eis que a noite é passada","author":"Leila Naylor Morris"},{"n":240,"file":"240.mxl","title":"Não me cansarei de cantar","author":"Peter Philip Bilhorn"},{"n":241,"file":"241.mxl","title":"A Justiça divina","author":"Charles Hutchinson Gabriel"},{"n":242,"file":"242.mxl","title":"Profundo é o saber de Deus, Criador","author":"Johann Michael Haydn"},{"n":243,"file":"243.mxl","title":"É Jesus o nosso Intercessor","author":"Charles Hutchinson Gabriel"},{"n":244,"file":"244.mxl","title":"Cristo intercede por ti","author":"James Milton black"},{"n":245,"file":"245.mxl","title":"Não pode entender o mundo","author":""},{"n":246,"file":"246.mxl","title":"Irmãos, já resgatados","author":"Henry Lake Gilmour"},{"n":247,"file":"247.mxl","title":"Se fores tentado","author":"Horatio Richmond Palmer"},{"n":248,"file":"248.mxl","title":"Glória! Aleluia! Sinto Jesus","author":"Phoebe Palmer Knapp"},{"n":249,"file":"249.mxl","title":"A Caridade","author":"Frederick Augustus Fillmore"},{"n":250,"file":"250.mxl","title":"Com meu Redentor viverei nos céus","author":"Charles Hutchinson Gabriel"},{"n":251,"file":"251.mxl","title":"Firme nas mãos de Cristo","author":"William Howard Doane"},{"n":252,"file":"252.mxl","title":"Exaltação ao Deus Onipotente!","author":"Jakob Ludwig Felix Mendelssohn-Bartholdy"},{"n":253,"file":"253.mxl","title":"Foi alegre, ditoso o dia","author":"Albert Simpson Reitz"},{"n":254,"file":"254.mxl","title":"De Jesus a graça divina","author":"Ludwig van Betthoven"},{"n":255,"file":"255.mxl","title":"Jesus é a nossa Rocha","author":"Lewis Edgar Jones"},{"n":256,"file":"256.mxl","title":"Sem Deus Pai, vivi no mundo","author":"William Batchelder Bradbury"},{"n":257,"file":"257.mxl","title":"Remiu-nos por graça","author":"Leila Naylor Morris"},{"n":258,"file":"258.mxl","title":"Louvemos ao nosso Senhor","author":""},{"n":259,"file":"259.mxl","title":"Só triunfará o de sincero coração","author":"Isaac Hickman Meredith"},{"n":260,"file":"260.mxl","title":"Sou servo inútil, ó Deus piedoso","author":""},{"n":261,"file":"261.mxl","title":"Vivo por Cristo","author":"Carl Harold Lowden"},{"n":262,"file":"262.mxl","title":"Senhor, a Tua igreja","author":"Freeman Lewis"},{"n":263,"file":"263.mxl","title":"Cristo é Luz resplandecente","author":"Daniel Brink Towner"},{"n":264,"file":"264.mxl","title":"Redentor celeste e santo","author":""},{"n":265,"file":"265.mxl","title":"Bençãos dos céus prometidas","author":"Ira Allan Sankey"},{"n":266,"file":"266.mxl","title":"Vinde às fileiras","author":""},{"n":267,"file":"267.mxl","title":"Graça maravilhosa","author":"Haldor Lillenas"},{"n":268,"file":"268.mxl","title":"Ó Deus bendito","author":"George Coles Stebbins"},{"n":269,"file":"269.mxl","title":"Ressuscitados, por graça, fomos","author":""},{"n":270,"file":"270.mxl","title":"Deste mundo mais nada esperarei","author":""},{"n":271,"file":"271.mxl","title":"Graças dou a Ti, ó bom Deus","author":""},{"n":272,"file":"272.mxl","title":"Louvarei ao bom Jesus","author":"Howard E. Smith"},{"n":273,"file":"273.mxl","title":"Jesus me deu celeste hino","author":"Elton Menno Roth"},{"n":274,"file":"274.mxl","title":"Na plenitude estarei","author":"Daniel Brink Towner"},{"n":275,"file":"275.mxl","title":"Avante eu vou","author":"Frank Monford Graham"},{"n":276,"file":"276.mxl","title":"Ó Senhor da glória","author":"Herbert Henry Howard Brooth"},{"n":277,"file":"277.mxl","title":"Oh! Quanto é bom louvarmos","author":""},{"n":278,"file":"278.mxl","title":"Éramos mortos nas obras más","author":"Philip Paul Bliss"},{"n":279,"file":"279.mxl","title":"Oh! Não temas, igreja de Jesus","author":"Charles Hutchinson Gabriel"},{"n":280,"file":"280.mxl","title":"De Deus a armadura","author":"Ira David Sankey"},{"n":281,"file":"281.mxl","title":"Soldados valorosos nós somos","author":"Charles Hutchinson Gabriel"},{"n":282,"file":"282.mxl","title":"Constantemente oremos a Deus","author":"Alfred Henry Ackley"},{"n":283,"file":"283.mxl","title":"Quero, ó Senhor, ir Contigo ao céu","author":""},{"n":284,"file":"284.mxl","title":"Louvor nos céus altíssimos","author":""},{"n":285,"file":"285.mxl","title":"Glória e louvor a Jesus darei","author":"Anthony Johnson Showalter"},{"n":286,"file":"286.mxl","title":"Nome precioso para mim","author":"Lela B. Long"},{"n":287,"file":"287.mxl","title":"Irmãos amados, sempre avante","author":""},{"n":288,"file":"288.mxl","title":"Ó irmãos, com Cristo avante","author":"Marcus McKibben Wells"},{"n":289,"file":"289.mxl","title":"Avante, sempre avante","author":"Winfield Scott Weeden"},{"n":290,"file":"290.mxl","title":"Sempre avante!","author":"William Fiske Sherwin"},{"n":291,"file":"291.mxl","title":"Irmãos, avante, avante!","author":"Adam Geibel"},{"n":292,"file":"292.mxl","title":"Oh! Quanto é bom o Redentor!","author":""},{"n":293,"file":"293.mxl","title":"Tu és Oleiro","author":"George Coles Stebbins"},{"n":294,"file":"294.mxl","title":"Avante! Coragem! Marchemos","author":""},{"n":295,"file":"295.mxl","title":"Fui, Senhor, por Ti remido","author":"Jhon Robson Sweney"},{"n":296,"file":"296.mxl","title":"Teu Nome é soberano, ó Redentor","author":"Leila Naylor Morris"},{"n":297,"file":"297.mxl","title":"Senhor, conforta meu coração","author":"William James Kirkpatrick"},{"n":298,"file":"298.mxl","title":"Avante sempre, sem temer!","author":"James McGranahan"},{"n":299,"file":"299.mxl","title":"Em nome de Jesus","author":"William Howard Doane"},{"n":300,"file":"300.mxl","title":"Tudo o que nos falta","author":"William James Kirkpatrick"},{"n":301,"file":"301.mxl","title":"Nossa Esperança é Jesus","author":""},{"n":302,"file":"302.mxl","title":"Que gloriosa Esperança é Jesus!","author":""},{"n":303,"file":"303.mxl","title":"O Senhor não mudará","author":"Edmund Simon Lorenz"},{"n":304,"file":"304.mxl","title":"Cristo é a Esperança","author":"Hubert Platt Main"},{"n":305,"file":"305.mxl","title":"Oh! Que fundamento","author":"John Francis Wade"},{"n":306,"file":"306.mxl","title":"Bendizei ao Altíssimo Deus","author":"William Howard Doane"},{"n":307,"file":"307.mxl","title":"Cristo nos dará da Sua plenitude","author":"Leila Naylor Morris"},{"n":308,"file":"308.mxl","title":"Soa a trombeta","author":""},{"n":309,"file":"309.mxl","title":"Galardão nos espera","author":"Leila Naylor Morris"},{"n":310,"file":"310.mxl","title":"Nós Te louvamos, ó Rei dos reis","author":""},{"n":311,"file":"311.mxl","title":"Teus tesouros revelaste","author":"James Milton Black"},{"n":312,"file":"312.mxl","title":"Tributos de louvor","author":"John Darwall"},{"n":313,"file":"313.mxl","title":"Arrebatado aos céus","author":""},{"n":314,"file":"314.mxl","title":"O Teu poder supremo","author":""},{"n":315,"file":"315.mxl","title":"Contempla do céu","author":"Robert Harkness"},{"n":316,"file":"316.mxl","title":"Tua vida é triste?","author":"C. S. Kauffman"},{"n":317,"file":"317.mxl","title":"Sinto o Senhor, por fé, em mim","author":"Will Lamartine Thompson"},{"n":318,"file":"318.mxl","title":"Ó Salvador, vem converter o pecador","author":"T. R. Allen"},{"n":319,"file":"319.mxl","title":"Foi Jesus Quem me salvou","author":"Edwin Othello Excell"},{"n":320,"file":"320.mxl","title":"Que prazer é andar com Cristo","author":"Charles Frederick Weigle"},{"n":321,"file":"321.mxl","title":"Bendito seja o Deus vivente","author":"Albert Lister Peace"},{"n":322,"file":"322.mxl","title":"Vem, Rei eterno","author":"George Stark Schuler"},{"n":323,"file":"323.mxl","title":"Oh! Não busques, ansioso","author":"C. C. Williams"},{"n":324,"file":"324.mxl","title":"Do mal o Salvador veio me tirar","author":"Margaret Jenkins Harris"},{"n":325,"file":"325.mxl","title":"Louvemos ao Rei dos reis","author":"Robert Lowry"},{"n":326,"file":"326.mxl","title":"Sempre a Cristo fiéis","author":"William Edie Marks"},{"n":327,"file":"327.mxl","title":"Soldados somos do Senhor","author":"William Burdine Blake"},{"n":328,"file":"328.mxl","title":"Grande é o Teu poder, Senhor","author":""},{"n":329,"file":"329.mxl","title":"Com fé combate","author":"George Coles Stebbins"},{"n":330,"file":"330.mxl","title":"Ao findar a jornada","author":"Elton Menno Roth"},{"n":331,"file":"331.mxl","title":"Vem a Cristo sem tardar","author":"Peter Philip Bilhorn"},{"n":332,"file":"332.mxl","title":"É Cristo Quem cuida de ti","author":"William James Kirkpatrick"},{"n":333,"file":"333.mxl","title":"Peregrino sou no mundo","author":"William Batchelder Bradbury"},{"n":334,"file":"334.mxl","title":"Há uma pátria perfeita...","author":"Joseph Philbrick Webster"},{"n":335,"file":"335.mxl","title":"Eu almejo nessa pátria entrar","author":"Edwin Othello Excell"},{"n":336,"file":"336.mxl","title":"Sempre bilhar devemos","author":"Isaac Hickman Meredith"},{"n":337,"file":"337.mxl","title":"Por fé seguimos ao Senhor","author":"Leila Naylor Morris"},{"n":338,"file":"338.mxl","title":"O Senhor é sempiterno","author":"Grant Colfax Tullar"},{"n":339,"file":"339.mxl","title":"Glória sem par","author":"Charles Hutchinson Gabriel"},{"n":340,"file":"340.mxl","title":"No mundo sou peregrino","author":"B. B. Bosworth"},{"n":341,"file":"341.mxl","title":"Com fé espera no Senhor","author":"William Batchelder Bradbury"},{"n":342,"file":"342.mxl","title":"Sião celestial","author":""},{"n":343,"file":"343.mxl","title":"Lá no céu cantaremos","author":"Emily Divine Wilson"},{"n":344,"file":"344.mxl","title":"Vou encontrar meu Deus","author":"Leila Naylor Morris"},{"n":345,"file":"345.mxl","title":"Regozijo-me em falar do Salvador","author":"Minnie A. Steele"},{"n":346,"file":"346.mxl","title":"Longe do mal e perto de Ti","author":"George Coles Stebbins"},{"n":347,"file":"347.mxl","title":"Ontem, hoje e eternamente","author":"James H. Burke"},{"n":348,"file":"348.mxl","title":"Em Cristo espera, sem vacilar","author":""},{"n":349,"file":"349.mxl","title":"Irmãos amados","author":""},{"n":350,"file":"350.mxl","title":"A jornada farei","author":"Anne May Sebring Murphy"},{"n":351,"file":"351.mxl","title":"Senhor, à Tua presença","author":""},{"n":352,"file":"352.mxl","title":"Sinto viva esperança","author":"L. O. Brown"},{"n":353,"file":"353.mxl","title":"Eleitos nós somos","author":"Ira David Sankey"},{"n":354,"file":"354.mxl","title":"Jerusalém celestial!","author":"John Robson Sweney"},{"n":355,"file":"355.mxl","title":"A Ti, Deus, eu consagrei-me","author":"Leila Naylor Morris"},{"n":356,"file":"356.mxl","title":"Por preço elevado Jesus resgatou-me","author":"Daniel Brink Towner"},{"n":357,"file":"357.mxl","title":"Face a face O verei","author":"George Coles Stebbins"},{"n":358,"file":"358.mxl","title":"O Teu precioso sangue","author":""},{"n":359,"file":"359.mxl","title":"Ó irmãos, de Deus diletos","author":"James McGranahan"},{"n":360,"file":"360.mxl","title":"Do mal apartados devemos estar","author":"Henry Lake Gilmour"},{"n":361,"file":"361.mxl","title":"Tudo entende o Salvador","author":"Justin G. Burt"},{"n":362,"file":"362.mxl","title":"Que bela herança!","author":"James McGranahan"},{"n":363,"file":"363.mxl","title":"Aos Teus pés estou, Senhor","author":"William Gustavus Fischer"},{"n":364,"file":"364.mxl","title":"Os tempos já chegados são...","author":""},{"n":365,"file":"365.mxl","title":"Contrito, venho a Ti","author":"Robert Lowry"},{"n":366,"file":"366.mxl","title":"Pela fé tereis vitória","author":"Thorro Harris"},{"n":367,"file":"367.mxl","title":"Ao que vive para sempre...","author":"Thomas Hastings"},{"n":368,"file":"368.mxl","title":"Deus nos elegeu para Si","author":"Melodia inglesa"},{"n":369,"file":"369.mxl","title":"Sentes bater em teu coração?","author":"J. Howard Entwisle"},{"n":370,"file":"370.mxl","title":"Têm os santos do Senhor","author":"William James Kirkpatrick"},{"n":371,"file":"371.mxl","title":"Aos Teus pés me apresento","author":"Lewis Hartsough"},{"n":372,"file":"372.mxl","title":"Da igreja, fiel Fundamento é Jesus","author":"Thorro Harris"},{"n":373,"file":"373.mxl","title":"Cristo Jesus, o Redentor","author":"John Bacchus Dykes"},{"n":374,"file":"374.mxl","title":"Santo! Santo! Santo!","author":"John Bacchus Dykes"},{"n":375,"file":"375.mxl","title":"\"A paz Eu vos deixo\"","author":"Philip Paul Bliss"},{"n":376,"file":"376.mxl","title":"Senhor, preciso mais...","author":""},{"n":377,"file":"377.mxl","title":"No céu, Senhor, no céu","author":""},{"n":378,"file":"378.mxl","title":"Grandioso és Tu","author":"Stuart K. Hine"},{"n":379,"file":"379.mxl","title":"Grande festa haverá nos céus","author":"William Howard Doane"},{"n":380,"file":"380.mxl","title":"Com Jesus, eternamente viverei","author":"William James Kirkpatrick"},{"n":381,"file":"381.mxl","title":"Mui breve virá, mui breve virá","author":"Leila Naylor Morris"},{"n":382,"file":"382.mxl","title":"Creio nas fiéis promessas do meu Deus","author":"Russell Kelso Carter"},{"n":383,"file":"383.mxl","title":"Cristo é a Estrela","author":""},{"n":384,"file":"384.mxl","title":"Nos resgatou e nos lavou","author":"Oscar A. Miller"},{"n":385,"file":"385.mxl","title":"\"Vinde após Mim\"","author":"Samuel McBurney"},{"n":386,"file":"386.mxl","title":"Pela morte de Jesus","author":"Charles Austin Miles"},{"n":387,"file":"387.mxl","title":"Ó Salvador, que recebeste poder","author":""},{"n":388,"file":"388.mxl","title":"Na cidade santa","author":"Haldor Lilenas"},{"n":389,"file":"389.mxl","title":"Cristo Jesus chama os Seus","author":"George Coles Stebbins"},{"n":390,"file":"390.mxl","title":"Eis que vem o Verdadeiro","author":"Silas Jones Vail"},{"n":391,"file":"391.mxl","title":"Um peregrino sou aqui","author":"Charles Hutchinson Gabriel"},{"n":392,"file":"392.mxl","title":"Com Jesus, a Esperança","author":"Charles Brenton Widmeyer"},{"n":393,"file":"393.mxl","title":"Ó bom Jesus, meu caro Jesus","author":""},{"n":394,"file":"394.mxl","title":"Nas moradas do Senhor","author":"Leila Naylor Morris"},{"n":395,"file":"395.mxl","title":"\"Eis-Me aqui\", dirá o Criador","author":"George William Warren"},{"n":396,"file":"396.mxl","title":"Vamos, ó irmãos, marchar","author":"Charles Brenton Widmeyer"},{"n":397,"file":"397.mxl","title":"Paz, sublime paz","author":"Harry Dixon Loes"},{"n":398,"file":"398.mxl","title":"Não tardará a volta do Senhor","author":"Charles Hutchinson Gabriel"},{"n":399,"file":"399.mxl","title":"\"Sou a Videira\"","author":""},{"n":400,"file":"400.mxl","title":"Divina Fonte é Jesus","author":"Phoebe Palmer Knapp"},{"n":401,"file":"401.mxl","title":"Revela Teu querer","author":"William James Kirkpatrick"},{"n":402,"file":"402.mxl","title":"Ó irmãos, a Deus devemos...","author":"Charles Crozat Converse"},{"n":403,"file":"403.mxl","title":"Pela fé uma vez...","author":""},{"n":404,"file":"404.mxl","title":"Por fé, recebe o grande Mestre","author":""},{"n":405,"file":"405.mxl","title":"Só por Cristo temos salvação","author":"Leila Naylor Morris"},{"n":406,"file":"406.mxl","title":"A voz de Cristo te convida: Vem!","author":"Judson Wheeler Van DeVenter"},{"n":407,"file":"407.mxl","title":"És bendito eternamente!","author":""},{"n":408,"file":"408.mxl","title":"Jesus Cristo é o Pão celeste","author":"François Hippolyte Barthélémon"},{"n":409,"file":"409.mxl","title":"Breve voltará Jesus Cristo","author":"George Frederick Root"},{"n":410,"file":"410.mxl","title":"O sangue precioso","author":"William James Kirkpatrick"},{"n":411,"file":"411.mxl","title":"O vitupério de Jesus","author":"Harrison Millard"},{"n":412,"file":"412.mxl","title":"Senhor, recordamos aqui...","author":"(Santa Ceia)"},{"n":413,"file":"413.mxl","title":"Foi por mim que morreste","author":"Grant Colfax Tullar"},{"n":414,"file":"414.mxl","title":"Teu sangue imaculado","author":""},{"n":415,"file":"415.mxl","title":"Na cruz morreu o Cordeiro","author":""},{"n":416,"file":"416.mxl","title":"No Calvário...","author":""},{"n":417,"file":"417.mxl","title":"Recordemo-nos sempre do Mestre","author":"James Henry Fillmore"},{"n":418,"file":"418.mxl","title":"Só Jesus Cristo, santo Cordeiro","author":"William James Kirkpatrick"},{"n":419,"file":"419.mxl","title":"\"Fazei isto em memória de Mim\"","author":"(Santa Ceia)"},{"n":420,"file":"420.mxl","title":"Foi no Calvário...","author":"Lewis Hartsough"},{"n":421,"file":"421.mxl","title":"Recorda, por fé, minha alma","author":"William James Kirkpatrick"},{"n":422,"file":"422.mxl","title":"Jesus Cristo, fiel Cordeiro","author":"Frederick Arthur Graves"},{"n":423,"file":"423.mxl","title":"Só o sangue precioso e expiador","author":"Elisha Albright Hoffman"},{"n":424,"file":"424.mxl","title":"Ó Jesus, por nós morreste","author":"Jakob Ludwig Felix Mendelssohn - Bartholdy"},{"n":425,"file":"425.mxl","title":"Cristo Supremo","author":"Charles Howard Marsh"},{"n":426,"file":"426.mxl","title":"Lá no céu, o lar de amor","author":"(Funeral)"},{"n":427,"file":"427.mxl","title":"Os que no Senhor dormiram","author":"Robert Lowry"},{"n":428,"file":"428.mxl","title":"O dia de Cristo bem perto está","author":"(Funeral)"},{"n":429,"file":"429.mxl","title":"A trombeta soará","author":"Samuel Webbe"},{"n":430,"file":"430.mxl","title":"Preciosa é, aos olhos do Criador...","author":"(Funeral)"},{"n":431,"file":"431.mxl","title":"Ó meninos, estamos reunidos","author":"Lowell Mason"},{"n":432,"file":"432.mxl","title":"Vem, ó divino Mestre","author":"Charles Hutchinson Gabriel"},{"n":433,"file":"433.mxl","title":"Na santa escola","author":"Lowell Mason"},{"n":434,"file":"434.mxl","title":"A minha alma sente paz no Senhor","author":"George Willis Cooke"},{"n":435,"file":"435.mxl","title":"Ó Jesus, quanto és piedoso!","author":""},{"n":436,"file":"436.mxl","title":"Alegria sinto em servir Jesus","author":"Leila Naylor Morris"},{"n":437,"file":"437.mxl","title":"Os meninos viram Jesus passar","author":"Edwin Othello Excell"},{"n":438,"file":"438.mxl","title":"Oh! Que amor celeste!","author":"John Hart Stockton"},{"n":439,"file":"439.mxl","title":"Somos jovens","author":"James McGranahan"},{"n":440,"file":"440.mxl","title":"Lembra-te do teu Criador!","author":"Isaac Hickman Meredith"},{"n":441,"file":"441.mxl","title":"Eu sou um cordeirinho","author":""},{"n":442,"file":"442.mxl","title":"Bênçãos, bênçãos Deus derramará","author":"George Frederick Root"},{"n":443,"file":"443.mxl","title":"Ó meninos, Deus vos convida","author":"John Zundel"},{"n":444,"file":"444.mxl","title":"Ó meninos, exaltemos","author":""},{"n":445,"file":"445.mxl","title":"Ajuntemos um tesouro eterno","author":"Henry Tucker"},{"n":446,"file":"446.mxl","title":"Vós, ó jovens do Senhor","author":"Charles Hutchinson Gabriel"},{"n":447,"file":"447.mxl","title":"Brilha mais e mais","author":"William James Kirckpatrick"},{"n":448,"file":"448.mxl","title":"Sou criança, Senhor","author":"George Bennard"},{"n":449,"file":"449.mxl","title":"O meu nome no céu escreveste, Senhor","author":"Frank Marion Davis"},{"n":450,"file":"450.mxl","title":"Vamos, queridos, escolher a boa parte","author":"William Augustine Ogden"},{"n":451,"file":"451.mxl","title":"Jamais esquecerei Tua mercê","author":"Walter Stillman Martin"},{"n":452,"file":"452.mxl","title":"Jesus, ó Divinal Pastor","author":"Phoebhe Palmer Knapp"},{"n":453,"file":"453.mxl","title":"Consagrados sejamos a Deus","author":"Elisha Albright Hoffman"},{"n":454,"file":"454.mxl","title":"Cidadão dos céus","author":"Lowell Mason"},{"n":455,"file":"455.mxl","title":"Quão ditoso é caminhar com Jesus!","author":"William James Kirkpatrick"},{"n":456,"file":"456.mxl","title":"Somos joias preciosas","author":"George Frederick Root"},{"n":457,"file":"457.mxl","title":"Comigo está Jesus","author":"Charles Austin Miles"},{"n":458,"file":"458.mxl","title":"Cristo me ama","author":"William Batchelder Bradbury"},{"n":459,"file":"459.mxl","title":"Vamos nos preparar!","author":"Leila Naylor Morris"},{"n":460,"file":"460.mxl","title":"Vamos todos juntos cantar","author":"Harry Dudley Clarke"},{"n":461,"file":"461.mxl","title":"Abrigado em Jesus","author":"James David Vaughan"},{"n":462,"file":"462.mxl","title":"Gloriosa é a história","author":"Peter Philip Bilhorn"},{"n":463,"file":"463.mxl","title":"Mocidade! Vamos combater!","author":"Grant Colfax Tullar"},{"n":464,"file":"464.mxl","title":"Reunidos nós estamos","author":"John Wyeth"},{"n":465,"file":"465.mxl","title":"Deus tem por nós imenso amor","author":""},{"n":466,"file":"466.mxl","title":"A criança consagrada","author":"Edwin Othello Excell"},{"n":467,"file":"467.mxl","title":"Vamos com Jesus","author":"Flora Hamilton Cassel"},{"n":468,"file":"468.mxl","title":"Toda a criança...","author":""},{"n":469,"file":"469.mxl","title":"Pai nosso, que estás nos céus","author":"John Robson Sweney"},{"n":470,"file":"470.mxl","title":"Jesus Cristo, Seus fiéis, ensina","author":"William Batchelder Bradbury"},{"n":471,"file":"471.mxl","title":"Que grande bem é andar com Cristo!","author":"Sophia Zuberbühler"},{"n":472,"file":"472.mxl","title":"Glorificarei, glorificarei","author":"Philip Paul Bliss"},{"n":473,"file":"473.mxl","title":"Forasteiro sou no mundo","author":"John Hughes"},{"n":474,"file":"474.mxl","title":"Oh! Glória! Bendito é o Senhor!","author":"Lewis Edgar Jones"},{"n":475,"file":"475.mxl","title":"Se eu for aqui provado","author":"Henry Maxwell Wright"},{"n":476,"file":"476.mxl","title":"\"Deixai a Mim vir os pequeninos...\"","author":"M. D'Angelo"},{"n":477,"file":"477.mxl","title":"Vinde, crianças","author":"George Frederick Root"},{"n":478,"file":"478.mxl","title":"Cedo retorna o Senhor","author":"Charles Hutchinson Gabriel"},{"n":479,"file":"479.mxl","title":"Somos jovens consagrados","author":"Bentley DeForest Ackley"},{"n":480,"file":"480.mxl","title":"Jovens, amai o conselho","author":"William James Kirkpatrick"}];
+let hymnIndex=null;
+const hnNorm=t=>String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+function openHinos(){
+    document.getElementById('mHinos').hidden=false; document.body.style.overflow='hidden';
+    if(!hymnIndex){
+        hymnIndex=HYMN_INDEX;
+        hymnIndex.forEach(h=>{ h._k=hnNorm(String(h.n).padStart(3,'0')+' '+h.title+' '+h.author); });
+        renderHinos('');
+    }
+    setTimeout(()=>{ try{ document.getElementById('hnSearch').focus(); }catch(e){} },50);
+}
+function closeHinos(){ document.getElementById('mHinos').hidden=true; document.body.style.overflow=''; }
+function renderHinos(q){
+    const ul=document.getElementById('hnList'); ul.innerHTML='';
+    q=hnNorm(q).trim();
+    const list=!q?hymnIndex:hymnIndex.filter(h=>/^\d+$/.test(q)?(String(h.n)===String(+q)||String(h.n).padStart(3,'0').startsWith(q)||h._k.includes(q)):h._k.includes(q));
+    if(!list.length){ ul.innerHTML='<li class="empty">Nenhum hino encontrado.</li>'; return; }
+    const frag=document.createDocumentFragment();
+    list.forEach(h=>{
+        const li=document.createElement('li'), b=document.createElement('b'), num=document.createElement('span'); num.className='hn-num'; num.textContent=String(h.n).padStart(3,'0');
+        b.append(num,document.createTextNode(' '+h.title)); li.appendChild(b);
+        if(h.author){ const sm=document.createElement('small'); sm.textContent=h.author; li.appendChild(sm); }
+        li.onclick=()=>loadHymn(h); frag.appendChild(li);
+    });
+    ul.appendChild(frag);
+}
+document.getElementById('hnSearch').addEventListener('input',e=>{ if(hymnIndex) renderHinos(e.target.value); });
+document.getElementById('hnClose').onclick=closeHinos;
+document.getElementById('mHinos').addEventListener('pointerdown',e=>{ if(e.target.id==='mHinos') closeHinos(); });
+document.getElementById('btnHinos').onclick=openHinos;
+document.getElementById('btnHinosWelcome').onclick=openHinos;
+async function loadHymn(h){
+    loadingOverlay.classList.add('active');
+    try{
+        const r=await fetch('hinos/'+h.file);
+        if(r.status===404){ toast('O hino '+h.file+' ainda não foi enviado para a pasta hinos do GitHub'); loadingOverlay.classList.remove('active'); return; }
+        if(!r.ok) throw new Error('http '+r.status);
+        const parsed=await parseScoreFile(await r.arrayBuffer());
+        if(!parsed.notes.length) throw new Error('Nenhuma nota encontrada');
+        if(state.isPlaying) stopPlayback();
+        speedSelect.value='1'; state.speed=1;
+        await applyNotes(parsed.notes,parsed.duration,parsed.names);
+        fileNameEl.textContent=String(h.n).padStart(3,'0')+' · '+h.title;
+        closeHinos(); switchView('player');
+        toast(String(h.n).padStart(3,'0')+' · '+h.title,'success');
+    }catch(err){ console.error(err); toast('Não foi possível abrir este hino'); }
+    loadingOverlay.classList.remove('active');
+}
 
 // ======================== PLAYER EVENT LISTENERS ========================
 document.getElementById('fileInput').addEventListener('change',e=>{ if(e.target.files[0]) loadMidiFile(e.target.files[0]); });
@@ -1192,6 +1782,7 @@ document.addEventListener('keydown',e=>{
     if(tag==='INPUT'||tag==='SELECT'||tag==='TEXTAREA') return;
     if(e.code==='Space'){e.preventDefault();startPlayback();}
     else if(e.code==='KeyS') stopPlayback();
+    else if(/^(Digit|Numpad)[0-8]$/.test(e.code)&&state.voiceList.length>1){ const k=+e.code.slice(-1); if(k===0) setVoiceSel(state.voiceList.map(v=>v.track)); else if(state.voiceList[k-1]) setVoiceSel([state.voiceList[k-1].track]); }
     else if(e.code==='ArrowLeft'){if(state.midiLoaded) seekTo(state.pausedAt-5);}
     else if(e.code==='ArrowRight'){if(state.midiLoaded) seekTo(state.pausedAt+5);}
 });
