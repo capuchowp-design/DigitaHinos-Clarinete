@@ -461,8 +461,10 @@
         <div class="piano-container"><canvas id="pianoCanvas"></canvas></div>
     </div>
     <div class="voice-bar" id="voiceBar" hidden>
-        <span class="vb-label">Vozes:</span>
+        <span class="vb-label" id="vbVoz">Vozes:</span>
         <div id="voiceChips" style="display:contents"></div>
+        <span class="vb-label" id="vbOct" style="margin-left:8px">8ª acima:</span>
+        <div id="octChips" style="display:contents"></div>
     </div>
     <div class="controls-bar">
         <div class="transport-group">
@@ -1244,8 +1246,8 @@ function loadMidiFile(file){
 
 async function applyNotes(notes, duration, names){
     notes.forEach(n=>{ n.color=gc(n.track||0); });
-    state.allNotes=notes; buildVoiceBar(notes,names);
-    state.notes=notes; state.duration=duration; state.midiLoaded=true;
+    notes.forEach(n=>{ n.m0=n.midi; }); state.allNotes=notes; state.octSet=new Set(); buildVoiceBar(notes,names);
+    state.notes=claDerive(); notes=state.notes; state.duration=duration; state.midiLoaded=true;
     let mn=127,mx=0; notes.forEach(n=>{if(n.midi<mn)mn=n.midi;if(n.midi>mx)mx=n.midi;});
     state.lowestNote=Math.max(21,mn-2); state.highestNote=Math.min(108,mx+2);
     while(state.highestNote-state.lowestNote<23){ if(state.lowestNote>21) state.lowestNote--; if(state.highestNote<108) state.highestNote++; }
@@ -1265,7 +1267,11 @@ function buildVoiceBar(notes,names){
     const tracks=[...new Set(notes.map(n=>n.track||0))].sort((a,b)=>a-b);
     state.voiceList=tracks.map(t=>{ const n=notes.find(x=>(x.track||0)===t); return {track:t,name:(names&&names[t])||('Faixa '+(t+1)),color:n.color||gc(t)}; });
     state.voiceSel=new Set(tracks); box.innerHTML='';
-    if(tracks.length<2){ bar.hidden=true; return; }
+    const oc=document.getElementById('octChips'); oc.innerHTML='';
+    state.voiceList.forEach(v=>{ const b=document.createElement('button'); b.type='button'; b.className='voice-chip o'+v.track; b.title='Tocar '+v.name+' uma oitava acima'; b.style.setProperty('--vc',v.color);
+        const d=document.createElement('span'); d.className='dot'; b.appendChild(d); b.appendChild(document.createTextNode(tracks.length<2?'Oitava acima':v.name)); b.addEventListener('click',()=>toggleOct(v.track)); oc.appendChild(b); });
+    document.getElementById('vbVoz').style.display=tracks.length<2?'none':''; bar.hidden=false;
+    if(tracks.length<2){ return; }
     const mk=(label,color,cls,fn,title)=>{
         const b=document.createElement('button'); b.type='button'; b.className='voice-chip '+cls; b.title=title||'';
         const d=document.createElement('span'); d.className='dot'; b.appendChild(d); b.appendChild(document.createTextNode(label));
@@ -1283,11 +1289,24 @@ function toggleVoice(t){
 }
 function setVoiceSel(list){
     state.voiceSel=new Set(list);
-    state.notes=state.allNotes.filter(n=>state.voiceSel.has(n.track||0));
-    state.totalNotes=state.notes.length; noteCountBadge.textContent=state.totalNotes+' notas';
-    refreshVoiceBar();
-    if(state.isPlaying){ const cp=state.currentTime; pausePlayback(); state.pausedAt=cp; startPlayback(); }
-    else { drawScene(); }
+    refreshVoiceBar(); claRefresh();
+}
+// notas que tocam = vozes escolhidas, com 8ª acima onde pedido, e SEMPRE dentro do alcance do clarinete:
+// a nota que soa é a mesma que a digitação mostrada (nota fora do alcance sobe/desce de oitava)
+function claFit(m){ const t=CLATYPES[claType].t; let w=m+t; while(w>96){ m-=12; w-=12; } while(w<52){ m+=12; w+=12; } return m; }
+function claDerive(){
+    return state.allNotes.filter(n=>state.voiceSel.has(n.track||0)).map(n=>Object.assign({},n,{midi:claFit(n.m0+(state.octSet.has(n.track||0)?12:0))}));
+}
+function toggleOct(t){ state.octSet.has(t)?state.octSet.delete(t):state.octSet.add(t); refreshVoiceBar(); claRefresh(); }
+function claRefresh(){
+    if(!state.allNotes.length) return;
+    const cp=state.isPlaying?state.currentTime:null;
+    state.notes=claDerive(); const notes=state.notes;
+    let mn=127,mx=0; notes.forEach(n=>{if(n.midi<mn)mn=n.midi;if(n.midi>mx)mx=n.midi;});
+    if(notes.length){ state.lowestNote=Math.max(21,mn-2); state.highestNote=Math.min(108,mx+2);
+        while(state.highestNote-state.lowestNote<23){ if(state.lowestNote>21) state.lowestNote--; if(state.highestNote<108) state.highestNote++; } }
+    buildPianoKeys(); state.totalNotes=notes.length; noteCountBadge.textContent=state.totalNotes+' notas';
+    if(cp!==null){ pausePlayback(); state.pausedAt=cp; startPlayback(); } else drawScene();
 }
 function refreshVoiceBar(){
     const all=state.voiceList.length, allOn=state.voiceSel.size===all;
@@ -1295,6 +1314,7 @@ function refreshVoiceBar(){
         if(b.classList.contains('all')) b.classList.toggle('on',allOn);
         else { const t=+[...b.classList].find(c=>/^v\d+$/.test(c)).slice(1); b.classList.toggle('on',!allOn&&state.voiceSel.has(t)); }
     });
+    document.querySelectorAll('#octChips .voice-chip').forEach(b=>{ const t=+[...b.classList].find(c=>/^o\d+$/.test(c)).slice(1); b.classList.toggle('on',state.octSet.has(t)); });
 }
 
 function buildPianoKeys(){
@@ -1687,7 +1707,7 @@ window.addEventListener('DOMContentLoaded',()=>{
     const sel=document.createElement('select'); sel.id='claType'; sel.setAttribute('aria-label','Tipo de clarinete');
     sel.style.cssText='position:absolute;top:8px;right:8px;z-index:5;background:rgba(5,10,16,.7);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:10px;padding:6px 8px;font:600 13px Inter,sans-serif;max-width:55%';
     Object.entries(CLATYPES).forEach(([k,v])=>{ const o=document.createElement('option'); o.value=k; o.textContent=v.n; if(k===claType) o.selected=true; sel.appendChild(o); });
-    sel.addEventListener('change',()=>{ claType=sel.value; try{localStorage.setItem('claType',claType);}catch(e){} drawPiano(); });
+    sel.addEventListener('change',()=>{ claType=sel.value; try{localStorage.setItem('claType',claType);}catch(e){} if(state.midiLoaded) claRefresh(); else drawPiano(); });
     box.appendChild(sel);
 });
 
