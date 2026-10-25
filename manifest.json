@@ -1,6 +1,6 @@
 {
-  "name": "Clarinet Bounce - Visualizador MIDI",
-  "short_name": "Clarinet Bounce",
+  "name": "DigitaHinos Clarinete - Visualizador MIDI",
+  "short_name": "DigitaHinos Clarinete",
   "description": "Visualizador MIDI com clarinete animado",
   "start_url": "./index.html",
   "display": "standalone",
