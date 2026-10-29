@@ -3186,6 +3186,22 @@ function pbStaffEvents(list,M,ts,total){
     return ev;
 }
 
+// ---- chaves do clarinete em SVG para a partitura/PDF (mesmas peças CLAK do desenho do app; traço adaptado ao papel) ----
+function pbClaKeys(g,cx,yTop,K,dn){
+    const X=x=>cx+(x-107)*K, Y=y=>yTop+(y-CLA_BB.y0)*K, f=n=>n.toFixed(2);
+    pbEl(g,'rect',{x:f(X(90)),y:f(Y(CLA_BB.y0)),width:f(34*K),height:f((CLA_BB.y1-CLA_BB.y0)*K),rx:f(10*K),fill:'#e4e4e4'});   // fantasma do tubo
+    const ell=(p,grow,att)=>pbEl(g,'ellipse',Object.assign({cx:f(X(p[1])),cy:f(Y(p[2])),rx:f((p[3]+grow)*K),ry:f((p[4]+grow)*K),transform:p[5]?`rotate(${f(p[5]*180/Math.PI)} ${f(X(p[1]))} ${f(Y(p[2]))})`:null},att));
+    const lin=(p,grow,col)=>pbEl(g,'path',{d:p[1].map((q,i)=>(i?'L':'M')+f(X(q[0]))+' '+f(Y(q[1]))).join(' '),fill:'none',stroke:col,'stroke-width':f(Math.max(.55,(p[2]+grow*2)*K)),'stroke-linecap':'round','stroke-linejoin':'round'});
+    CLAK.slice().sort((a,b)=>(dn.has(a[0])?1:0)-(dn.has(b[0])?1:0)).forEach(k=>{
+        const on=dn.has(k[0]), hc=k[1]==='E'?'#d62828':'#2e7d32', pr=k[3], EDGE=on?'#222':'#6f6f6f';
+        if(k[2]==='d'){ pr.forEach(p=>{ if(p[0]==='e') ell(p,0,{fill:'#dedede'}); }); return; }
+        if(k[2]==='r'){   // orifício com aro: preenchido na cor da mão quando fechado
+            const p=pr[0]; ell(p,3.2,{fill:'#dfe3e6',stroke:EDGE,'stroke-width':.5}); ell(p,0.2,{fill:on?hc:'#fff',stroke:on?'#222':'#9a9a9a','stroke-width':.45}); return;
+        }
+        pr.forEach(p=>{ if(p[0]==='e') ell(p,1.1,{fill:EDGE}); else lin(p,1.1,EDGE); });         // contorno
+        pr.forEach(p=>{ if(p[0]==='e') ell(p,0,{fill:on?hc:'#e9ecee'}); else lin(p,0,on?hc:'#e9ecee'); });   // chave
+    });
+}
 function pbBuildScore(opts){
     opts=opts||{};
     const ts=opts.ts||document.getElementById('scoreTimeSig').value||'4/4', M=PB_MEASURE[ts]||32, beatU=pbCompound(ts)?12:8;
@@ -3299,7 +3315,7 @@ function pbBuildScore(opts){
             else { cur={ms:[ms],w,first:false}; systems.push(cur); }
         }
     });
-    const FH=opts.fing===false?0:68;   // faixa da digitação (diagrama de furos e chaves) logo abaixo da 1ª pauta
+    const FH=opts.fing===false?0:100;   // faixa da digitação (diagrama de furos e chaves) logo abaixo da 1ª pauta
     const sysH=44+4*SP+(staves.length-1)*(4*SP+STG)+34+22+FH;
     const svgs=[]; let page=null, y=0, pageNo=0;
     const newPage=()=>{
@@ -3310,7 +3326,7 @@ function pbBuildScore(opts){
         svgs.push(s); page=s;
         if(pageNo===1){
             pbEl(page,'text',{x:W/2,y:70,'text-anchor':'middle','font-family':'Georgia,Times New Roman,serif','font-size':28,'font-weight':'bold',fill:'#111'},title||'Sem título');
-            pbEl(page,'text',{x:MX,y:96,'font-family':'Georgia,serif','font-size':12.5,'font-style':'italic',fill:'#555'},FH?(INSTR[CUR].name+' ('+({2:'escrito um tom acima do som',3:'escrito uma terça menor acima do som','-3':'escrito uma terça menor abaixo do som',0:'escrito como soa'}[(CLATYPES[claType]||{t:0}).t]||'')+') — desenho dos furos e chaves sob as notas (preto = fechado/apertado)'):INSTR[CUR].name);
+            pbEl(page,'text',{x:MX,y:96,'font-family':'Georgia,serif','font-size':12.5,'font-style':'italic',fill:'#555'},FH?(INSTR[CUR].name+' ('+({2:'escrito um tom acima do som',3:'escrito uma terça menor acima do som','-3':'escrito uma terça menor abaixo do som',0:'escrito como soa'}[(CLATYPES[claType]||{t:0}).t]||'')+') — desenho das chaves sob as notas (colorido = apertado: vermelho mão esquerda, verde mão direita)'):INSTR[CUR].name);
             pbEl(page,'ellipse',{cx:MX+5,cy:120,rx:4.6,ry:3.4,transform:'rotate(-20 '+(MX+5)+' 120)',fill:'#111'});
             pbEl(page,'line',{x1:MX+9.2,y1:119,x2:MX+9.2,y2:105,stroke:'#111','stroke-width':1.3});
             pbEl(page,'text',{x:MX+18,y:120,'font-family':'Arial,Helvetica,sans-serif','font-size':14,fill:'#111'},'= '+bpm);
@@ -3501,12 +3517,10 @@ function pbBuildScore(opts){
                     }
                 }
             });
-            // ---- digitação: furos e chaves do clarinete sob cada nota (preto = fechado/apertado) ----
+            // ---- digitação: as chaves do clarinete (mesmo desenho do app) sob cada nota; vermelho = mão esquerda, verde = mão direita ----
             if(FH&&k===0){
-                const yD=top+4*SP+22;
-                pbEl(pg,'text',{x:left+2,y:yD+24,'font-family':'Arial,sans-serif','font-size':9,'font-style':'italic',fill:'#777'},'furos');
-                const HOLE={th:[-2.5,4.5],L1:[0,10.5],L2:[0,15.5],L3:[0,20.5],R1:[0,27],R2:[0,32],R3:[0,37]};
-                const KEYS={reg:[3,0,2.2,1.6],A:[-8,10.5,2.6,2.6],T2:[-8,4.5,2.6,2.6],LC:[-8,20.5,2.6,2.6],S2:[8,20.5,2.6,2.6],RL:[8,27,2.6,2.6],P1:[-6.6,44,3.2,3.2],P2:[-2.2,44,3.2,3.2],P3:[2.2,44,3.2,3.2],P4:[6.6,44,3.2,3.2]};
+                const KK=0.168, yD=top+4*SP+16, CW=(CLA_BB.x1-CLA_BB.x0)*KK;
+                pbEl(pg,'text',{x:left+2,y:yD+34,'font-family':'Arial,sans-serif','font-size':9,'font-style':'italic',fill:'#777'},'chaves');
                 evs.forEach((ev,ei)=>{
                     if(ev.rest||!ev.notes.length) return;
                     const h=ev.notes[ev.notes.length-1];            // nota mais aguda do acorde (a melodia)
@@ -3514,13 +3528,9 @@ function pbBuildScore(opts){
                     let w=h.midi; while(w>96) w-=12; while(w<52) w+=12;   // a nota escrita já vem transposta; só ajusta ao alcance da tabela
                     const dn=new Set((CLAF[w]||'').split(' ').filter(Boolean));
                     const cx=X(ev), nx=ei+1<evs.length?X(evs[ei+1]):null;
-                    const sc=nx!==null&&nx>cx?Math.max(.6,Math.min(1,(nx-cx)/21)):1;
+                    const sc=nx!==null&&nx>cx?Math.max(.55,Math.min(1,(nx-cx)/(CW+4))):1;
                     const g=pbEl(pg,'g',{transform:`translate(${cx} ${yD}) scale(${sc}) translate(${-cx} ${-yD})`});
-                    pbEl(g,'line',{x1:cx,y1:yD+1,x2:cx,y2:yD+40,stroke:'#cfcfcf','stroke-width':.8});      // eixo do tubo
-                    for(const id in HOLE){ const [dx,dy]=HOLE[id], on=dn.has(id);
-                        pbEl(g,'circle',{cx:cx+dx,cy:yD+dy,r:id==='th'?1.7:2.1,fill:on?'#111':'#fff',stroke:'#111','stroke-width':.8}); }
-                    for(const id in KEYS){ const [dx,dy,kw,kh]=KEYS[id], on=dn.has(id);
-                        pbEl(g,'rect',{x:cx+dx-kw/2,y:yD+dy-kh/2,width:kw,height:kh,rx:.5,fill:on?'#111':'#fff',stroke:on?'#111':'#9a9a9a','stroke-width':.7}); }
+                    pbClaKeys(g,cx,yD,KK,dn);
                 });
             }
         });
